@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.9/browser/pixi.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pixi-sound@3.0.5/dist/pixi-sound.js"></script>
     <style>
         body {
             font-family: 'Press Start 2P', cursive;
@@ -177,37 +176,28 @@
 
     // Game layers
     const worldContainer = new PIXI.Container();
-    app.stage.addChild(worldContainer);
+    const uiContainer = new PIXI.Container();
+    app.stage.addChild(worldContainer, uiContainer);
 
-    let player, enemies, projectiles, xpOrbs, healthPacks;
+    let player, enemies, projectiles, xpOrbs, particles;
     let keys = {};
     let gameState = 'start'; // start, playing, levelup, gameover
     let gameTime = 0;
     let killCount = 0;
     let spawnTimer = 0;
-    let healthPackSpawnTimer = 0;
-    let nextHealthPackSpawnTime = 0;
     let wave = 1;
 
     let joystick, joystickActive = false, joystickPos = {x: 0, y: 0}, joystickDir = {x: 0, y: 0};
 
     // --- GAME ASSETS (REPLACE WITH YOUR OWN) ---
     const textures = {
-        player: PIXI.Texture.from('frog.png'), // Единый спрайт игрока
+        chicken: PIXI.Texture.from('https://placehold.co/40x40/FFFFFF/000000?text=C'),
+        frog: PIXI.Texture.from('./frog.png'),
         paperHands: PIXI.Texture.from('https://placehold.co/25x25/cccccc/000000?text=P'),
         bear: PIXI.Texture.from('https://placehold.co/45x45/e74c3c/000000?text=B'),
-        projectile: PIXI.Texture.from('https://placehold.co/10x10/f1c40f/000000?text=o'),
-        xpOrb: PIXI.Texture.from('xpOrb.png'),
-        healthPack: PIXI.Texture.from('https://placehold.co/30x30/ffd700/000000?text=HP'), // Аптечка
+        projectile: PIXI.Texture.from('https://placehold.co/10x10/f1c40f/000000?text=E'),
+        xpOrb: PIXI.Texture.from('./xpOrb.png'),
     };
-    
-    // --- SOUNDS ---
-    const sounds = {
-        shot: PIXI.sound.Sound.from('https://actions.google.com/sounds/v1/weapons/laser_shot.ogg'),
-        enemyDeath: PIXI.sound.Sound.from('https://actions.google.com/sounds/v1/impacts/hit_on_metal.ogg')
-    };
-    sounds.shot.volume = 0.3;
-    sounds.enemyDeath.volume = 0.5;
 
     // --- GAME SETTINGS ---
     const playerStats = {
@@ -217,6 +207,7 @@
         damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 }
     };
     
+    // (Upgrade pool remains the same)
     const upgradePool = [
         { id: 'attackSpeed', title: 'Быстрые Яйца', description: 'Скорость атаки +20%', apply: () => playerStats.attackCooldown *= 0.8 },
         { id: 'damage', title: 'Тяжелые Яйца', description: 'Урон +25%', apply: () => playerStats.projectileDamage *= 1.25 },
@@ -238,28 +229,35 @@
 
     class Player {
         constructor(x, y) {
-            this.sprite = new PIXI.Sprite(textures.player);
-            this.sprite.anchor.set(0.5);
-            this.sprite.x = x;
-            this.sprite.y = y;
+            this.container = new PIXI.Container();
+            this.container.x = x;
+            this.container.y = y;
             
+            const chickenSprite = new PIXI.Sprite(textures.chicken);
+            chickenSprite.anchor.set(0.5);
+            this.container.addChild(chickenSprite);
+
+            const frogSprite = new PIXI.Sprite(textures.frog);
+            frogSprite.anchor.set(0.5);
+            this.container.addChild(frogSprite);
+
             this.hpBar = new PIXI.Graphics();
-            this.sprite.addChild(this.hpBar);
+            this.container.addChild(this.hpBar);
             
             this.aura = new PIXI.Graphics();
-            this.sprite.addChild(this.aura);
+            this.container.addChild(this.aura);
             
-            worldContainer.addChild(this.sprite);
+            worldContainer.addChild(this.container);
 
             this.hp = playerStats.hp;
             this.lastAttackTime = 0;
             this.lastHitTime = 0;
         }
 
-        get x() { return this.sprite.x; }
-        get y() { return this.sprite.y; }
-        get width() { return this.sprite.width; }
-        get height() { return this.sprite.height; }
+        get x() { return this.container.x; }
+        get y() { return this.container.y; }
+        get width() { return this.container.width; }
+        get height() { return this.container.height; }
 
         draw() {
             // HP bar
@@ -272,7 +270,7 @@
 
             // Hit effect
             const isHit = Date.now() - this.lastHitTime < 200;
-            this.sprite.alpha = isHit && Math.floor(Date.now() / 50) % 2 === 0 ? 0.5 : 1;
+            this.container.alpha = isHit && Math.floor(Date.now() / 50) % 2 === 0 ? 0.5 : 1;
             
             // Aura
             this.aura.clear();
@@ -296,13 +294,13 @@
 
             if (moveX !== 0 || moveY !== 0) {
                 const length = Math.sqrt(moveX * moveX + moveY * moveY);
-                this.sprite.x += (moveX / length) * playerStats.speed * delta;
-                this.sprite.y += (moveY / length) * playerStats.speed * delta;
+                this.container.x += (moveX / length) * playerStats.speed * delta;
+                this.container.y += (moveY / length) * playerStats.speed * delta;
             }
 
             // World bounds
-            this.sprite.x = Math.max(this.width / 2, Math.min(app.screen.width - this.width / 2, this.sprite.x));
-            this.sprite.y = Math.max(this.height / 2, Math.min(app.screen.height - this.height / 2, this.sprite.y));
+            this.container.x = Math.max(this.width / 2, Math.min(app.screen.width - this.width / 2, this.container.x));
+            this.container.y = Math.max(this.height / 2, Math.min(app.screen.height - this.height / 2, this.container.y));
 
             // Attack
             if (Date.now() - this.lastAttackTime > playerStats.attackCooldown) {
@@ -321,14 +319,13 @@
                 playerStats.damageAura.lastTick = Date.now();
             }
 
-            this.draw();
+            this.draw(); // Update graphics objects
         }
         
         shoot() {
             const nearestEnemy = findNearestEnemy(this.x, this.y);
             if (!nearestEnemy) return;
 
-            sounds.shot.play();
             for (let i = 0; i < playerStats.projectileCount; i++) {
                 const angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
                 const spread = (Math.random() - 0.5) * 0.3;
@@ -367,7 +364,7 @@
         }
 
         destroy() {
-            worldContainer.removeChild(this.sprite);
+            worldContainer.removeChild(this.container);
         }
     }
 
@@ -407,6 +404,7 @@
         get height() { return this.sprite.height; }
 
         draw() {
+             // HP bar
             this.hpBar.clear();
             if(this.hp < this.maxHp){
                 this.hpBar.beginFill(0xff0000);
@@ -415,8 +413,10 @@
                 this.hpBar.drawRect(-this.width/2, -this.height/2 - 8, this.width * (this.hp / this.maxHp), 5);
                 this.hpBar.endFill();
             }
+
+            // Hit effect
             const isHit = Date.now() - this.lastHitTime < 100;
-            this.sprite.tint = isHit ? 0xFFFFFF : 0xFFFFFF;
+            this.sprite.tint = isHit ? 0xFFFFFF : 0xFFFFFF; // White flash
         }
 
         update(delta) {
@@ -430,9 +430,9 @@
             this.hp -= damage;
             this.lastHitTime = Date.now();
             if (this.hp <= 0) {
-                sounds.enemyDeath.play();
                 killCount++;
                 xpOrbs.push(new XpOrb(this.x, this.y, this.xpValue));
+                // particles.push(...) - can be added here
                 this.destroy();
                 enemies = enemies.filter(e => e !== this);
             }
@@ -443,6 +443,7 @@
         }
     }
     
+    // Other classes (Projectile, XpOrb) would be similarly converted to use PIXI.Sprite
     class Projectile {
         constructor(x, y, dx, dy, speed, damage) {
             this.sprite = new PIXI.Sprite(textures.projectile);
@@ -471,7 +472,7 @@
         }
     }
 
-    class XpOrb {
+     class XpOrb {
         constructor(x, y, value) {
             this.sprite = new PIXI.Sprite(textures.xpOrb);
             this.sprite.anchor.set(0.5);
@@ -501,29 +502,12 @@
             worldContainer.removeChild(this.sprite);
         }
     }
-    
-    class HealthPack {
-        constructor(x, y) {
-            this.sprite = new PIXI.Sprite(textures.healthPack);
-            this.sprite.anchor.set(0.5);
-            this.sprite.x = x;
-            this.sprite.y = y;
-            worldContainer.addChild(this.sprite);
-            this.healAmount = playerStats.maxHp * 0.10; // Лечит 10%
-        }
-        get x() { return this.sprite.x; }
-        get y() { return this.sprite.y; }
-        get width() { return this.sprite.width; }
-        get height() { return this.sprite.height; }
-        
-        destroy() {
-            worldContainer.removeChild(this.sprite);
-        }
-    }
 
     function init() {
+        // Clear containers
         worldContainer.removeChildren();
 
+        // Reset stats
         Object.keys(playerStats).forEach(key => {
             if (typeof playerStats[key] === 'object' && playerStats[key] !== null) {
                  if(key === 'damageAura') {
@@ -545,12 +529,10 @@
         enemies = [];
         projectiles = [];
         xpOrbs = [];
-        healthPacks = [];
+        particles = []; // Particle system can be added here
         gameTime = 0;
         killCount = 0;
         wave = 1;
-        healthPackSpawnTimer = 0;
-        nextHealthPackSpawnTime = 10 + Math.random() * 5;
 
         levelText.textContent = playerStats.level;
         xpFill.style.width = '0%';
@@ -574,27 +556,22 @@
     function update(delta) {
         gameTime += app.ticker.elapsedMS / 1000;
         spawnTimer += app.ticker.elapsedMS / 1000;
-        healthPackSpawnTimer += app.ticker.elapsedMS / 1000;
         
         if (spawnTimer > getSpawnInterval()) {
             spawnEnemies();
             spawnTimer = 0;
             wave = Math.floor(gameTime / 30) + 1;
         }
-
-        if (healthPackSpawnTimer > nextHealthPackSpawnTime) {
-            spawnHealthPack();
-            healthPackSpawnTimer = 0;
-            nextHealthPackSpawnTime = 10 + Math.random() * 5;
-        }
         
         player.update(delta);
         projectiles.forEach(p => p.update(delta));
         enemies.forEach(e => e.update(delta));
         xpOrbs.forEach(orb => orb.update(delta));
+        // particles.forEach(p => p.update(delta));
 
         checkCollisions();
 
+        // Remove off-screen projectiles
         projectiles.forEach((p, i) => {
             if (p.x < 0 || p.x > app.screen.width || p.y < 0 || p.y > app.screen.height) {
                 p.destroy();
@@ -602,6 +579,7 @@
             }
         });
         
+        // UI Update
         const minutes = Math.floor(gameTime / 60).toString().padStart(2, '0');
         const seconds = Math.floor(gameTime % 60).toString().padStart(2, '0');
         timerDisplay.textContent = `${minutes}:${seconds}`;
@@ -609,52 +587,35 @@
     }
     
     function checkCollisions() {
-        // Projectiles vs Enemies
-        for (let i = projectiles.length - 1; i >= 0; i--) {
-            const proj = projectiles[i];
-            for (let j = enemies.length - 1; j >= 0; j--) {
-                const enemy = enemies[j];
-                 if (isColliding(proj, enemy)) {
+        projectiles.forEach((proj, pIndex) => {
+            enemies.forEach((enemy) => {
+                if (isColliding(proj, enemy)) {
                     enemy.takeDamage(proj.damage);
                     proj.destroy();
-                    projectiles.splice(i, 1);
-                    break; 
+                    projectiles.splice(pIndex, 1);
                 }
-            }
-        }
+            });
+        });
         
-        // Player vs Enemies
         enemies.forEach(enemy => {
             if (isColliding(player, enemy)) {
                 player.takeDamage(enemy.damage);
             }
         });
         
-        // Player vs XP Orbs
-        for (let i = xpOrbs.length - 1; i >= 0; i--) {
-            const orb = xpOrbs[i];
+        xpOrbs.forEach((orb, oIndex) => {
             if (isColliding(orb, player)) {
                 player.addXp(orb.value);
                 orb.destroy();
-                xpOrbs.splice(i, 1);
+                xpOrbs.splice(oIndex, 1);
             }
-        }
-        
-        // Player vs Health Packs
-        for (let i = healthPacks.length - 1; i >= 0; i--) {
-            const pack = healthPacks[i];
-            if (isColliding(player, pack)) {
-                player.hp = Math.min(playerStats.maxHp, player.hp + pack.healAmount);
-                pack.destroy();
-                healthPacks.splice(i, 1);
-            }
-        }
+        });
     }
 
     function isColliding(obj1, obj2) {
-        if (!obj1 || !obj2 || !obj1.sprite || !obj2.sprite) return false;
-        const b1 = obj1.sprite.getBounds();
-        const b2 = obj2.sprite.getBounds();
+        // Simple AABB collision detection
+        const b1 = obj1.sprite ? obj1.sprite.getBounds() : obj1.container.getBounds();
+        const b2 = obj2.sprite ? obj2.sprite.getBounds() : obj2.container.getBounds();
         return b1.x < b2.x + b2.width &&
                b1.x + b1.width > b2.x &&
                b1.y < b2.y + b2.height &&
@@ -679,21 +640,18 @@
         for (let i = 0; i < numEnemies; i++) {
             const edge = Math.floor(Math.random() * 4);
             let x, y;
-            if (edge === 0) { x = Math.random() * app.screen.width; y = -50; } 
-            else if (edge === 1) { x = app.screen.width + 50; y = Math.random() * app.screen.height; } 
-            else if (edge === 2) { x = Math.random() * app.screen.width; y = app.screen.height + 50; } 
-            else { x = -50; y = Math.random() * app.screen.height; }
+            if (edge === 0) { // Top
+                x = Math.random() * app.screen.width; y = -50;
+            } else if (edge === 1) { // Right
+                x = app.screen.width + 50; y = Math.random() * app.screen.height;
+            } else if (edge === 2) { // Bottom
+                x = Math.random() * app.screen.width; y = app.screen.height + 50;
+            } else { // Left
+                x = -50; y = Math.random() * app.screen.height;
+            }
             const enemyType = (gameTime > 60 && Math.random() < 0.2) ? 'Bear' : 'PaperHands';
             enemies.push(new Enemy(x, y, enemyType));
         }
-    }
-    
-    function spawnHealthPack() {
-        if (healthPacks.length > 0) return; // Спавним только одну аптечку за раз
-        const padding = 50;
-        const x = padding + Math.random() * (app.screen.width - padding * 2);
-        const y = padding + Math.random() * (app.screen.height - padding * 2);
-        healthPacks.push(new HealthPack(x, y));
     }
     
     function getSpawnInterval() { return Math.max(0.5, 3 - gameTime / 60); }
@@ -709,6 +667,7 @@
         }
     }
 
+    // showLevelUpModal remains mostly the same as it controls HTML elements
     function showLevelUpModal() {
         levelUpModal.classList.remove('hidden');
         upgradeOptionsContainer.innerHTML = '';
@@ -742,7 +701,7 @@
     window.addEventListener('keydown', e => keys[e.key] = true);
     window.addEventListener('keyup', e => keys[e.key] = false);
 
-    // Mobile controls
+    // Mobile controls setup remains the same, but acts on canvas created by Pixi
     function isMobile() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
     function setupJoystick() {
         joystick = document.getElementById('joystick');
@@ -785,7 +744,7 @@
         setupJoystick();
     }
 
-    app.ticker.add(gameLoop);
+    app.ticker.add(gameLoop); // Start the game loop
 
 </script>
 </body>
