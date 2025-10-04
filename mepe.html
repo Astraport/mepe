@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUD Arena Survivor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.9/browser/pixi.min.js"></script>
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+            touch-action: none; /* Disable panning and zooming on mobile */
+        }
+        canvas {
+            cursor: none;
+            display: block;
+            border-radius: 8px;
+        }
+        .ui-element {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 2px solid #444;
+            text-shadow: 2px 2px #000;
+        }
+        #xpBar {
+            width: 100%;
+            height: 20px;
+            background-color: #444;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 2px solid #555;
+        }
+        #xpFill {
+            width: 0%;
+            height: 100%;
+            background-color: #33ff33;
+            transition: width 0.2s;
+        }
+        #levelUpModal, #gameOverScreen, #startScreen {
+            background-color: rgba(20, 20, 20, 0.9);
+            border: 4px solid #555;
+        }
+        .upgrade-btn, .action-btn {
+            background-color: #3a3a3a;
+            border: 2px solid #555;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px #222;
+        }
+        .upgrade-btn:hover, .action-btn:hover {
+            background-color: #4a4a4a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px #222;
+        }
+        .upgrade-btn:active, .action-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #222;
+        }
+        .joystick-base {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: rgba(80, 80, 80, 0.4);
+            border-radius: 50%;
+            bottom: 40px;
+            left: 40px;
+        }
+        .joystick-stick {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(120, 120, 120, 0.6);
+            border-radius: 50%;
+            top: 30px;
+            left: 30px;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center p-4">
+
+    <!-- Основной контейнер игры -->
+    <div id="gameContainer" class="relative w-full h-full max-w-[1000px] max-h-[800px] flex items-center justify-center">
+        <!-- Canvas будет создан PixiJS -->
+
+        <!-- UI Игры -->
+        <div id="gameUI" class="absolute top-0 left-0 w-full p-4 hidden">
+            <div class="flex justify-between items-center gap-4">
+                <div class="ui-element flex-1">
+                    <div class="text-sm text-gray-300 mb-1">LVL: <span id="levelText">1</span></div>
+                    <div id="xpBar"><div id="xpFill"></div></div>
+                </div>
+                <div class="ui-element text-center">
+                    <div class="text-lg">ВРЕМЯ</div>
+                    <div class="text-3xl" id="timer">00:00</div>
+                </div>
+                <div class="ui-element text-right">
+                    <div class="text-lg">ВРАГИ</div>
+                    <div class="text-3xl" id="killCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран "Уровень повышен" -->
+        <div id="levelUpModal" class="absolute inset-0 flex-col items-center justify-center p-8 gap-6 text-center hidden">
+            <h2 class="text-4xl text-yellow-400">LEVEL UP!</h2>
+            <p class="text-lg">Выберите улучшение:</p>
+            <div id="upgradeOptions" class="w-full max-w-md flex flex-col gap-4">
+                <!-- Опции улучшений будут добавлены сюда -->
+            </div>
+        </div>
+        
+        <!-- Стартовый экран -->
+        <div id="startScreen" class="absolute inset-0 flex flex-col items-center justify-center p-8 gap-6 text-center">
+            <div class="flex items-center gap-4">
+                 <div style="width:48px; height:48px; background-color: #2b2b2b; display:flex; justify-content: center; align-items: center; position: relative;">
+                    <div style="width: 40px; height: 40px; background-color: white; position: absolute;"></div>
+                    <div style="width: 32px; height: 32px; background-color: #2ecc71; position: absolute;"></div>
+                </div>
+                <h1 class="text-4xl md:text-5xl text-green-400">FUD Arena Survivor</h1>
+            </div>
+            <p class="text-lg mt-4 max-w-xl">Лягушка на курице против волн FUD'а. Выживи как можно дольше!</p>
+            <div class="mt-4">
+                <p class="text-xl">Управление:</p>
+                <p> <span class="text-yellow-400">WASD</span> / <span class="text-yellow-400">Клавиши со стрелками</span></p>
+                <p class="md:hidden mt-2">Или <span class="text-yellow-400">Джойстик</span> на экране</p>
+            </div>
+            <button id="startButton" class="action-btn text-2xl px-8 py-4 rounded-lg mt-6">Начать игру</button>
+        </div>
+
+        <!-- Экран "Игра окончена" -->
+        <div id="gameOverScreen" class="absolute inset-0 flex-col items-center justify-center p-8 gap-4 text-center hidden">
+            <h2 class="text-5xl text-red-500">GAME OVER</h2>
+            <p class="text-2xl mt-4">Вы продержались:</p>
+            <p id="finalTime" class="text-4xl text-yellow-400">00:00</p>
+            <p class="text-xl mt-2">Уничтожено FUD'еров:</p>
+            <p id="finalKills" class="text-3xl text-yellow-400">0</p>
+            <button id="restartButton" class="action-btn text-2xl px-8 py-4 rounded-lg mt-8">Попробовать снова</button>
+        </div>
+
+        <!-- Джойстик для мобильных устройств -->
+        <div id="joystick" class="joystick-base hidden">
+            <div class="joystick-stick"></div>
+        </div>
+    </div>
+
+<script>
+    const gameContainer = document.getElementById('gameContainer');
+    const gameUI = document.getElementById('gameUI');
+    const levelText = document.getElementById('levelText');
+    const xpFill = document.getElementById('xpFill');
+    const timerDisplay = document.getElementById('timer');
+    const killCountDisplay = document.getElementById('killCount');
+    const levelUpModal = document.getElementById('levelUpModal');
+    const upgradeOptionsContainer = document.getElementById('upgradeOptions');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    const finalTime = document.getElementById('finalTime');
+    const finalKills = document.getElementById('finalKills');
+
+    // --- PIXI.JS SETUP ---
+    const app = new PIXI.Application({
+        resizeTo: gameContainer,
+        backgroundColor: 0x2b2b2b,
+        antialias: false,
+    });
+    gameContainer.appendChild(app.view);
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST; // Pixel art friendly
+
+    // Game layers
+    const worldContainer = new PIXI.Container();
+    const uiContainer = new PIXI.Container();
+    app.stage.addChild(worldContainer, uiContainer);
+
+    let player, enemies, projectiles, xpOrbs, particles;
+    let keys = {};
+    let gameState = 'start'; // start, playing, levelup, gameover
+    let gameTime = 0;
+    let killCount = 0;
+    let spawnTimer = 0;
+    let wave = 1;
+
+    let joystick, joystickActive = false, joystickPos = {x: 0, y: 0}, joystickDir = {x: 0, y: 0};
+
+    // --- GAME ASSETS (REPLACE WITH YOUR OWN) ---
+    const textures = {
+        chicken: PIXI.Texture.from('https://placehold.co/40x40/FFFFFF/000000?text=C'),
+        frog: PIXI.Texture.from('./frog.png'),
+        paperHands: PIXI.Texture.from('https://placehold.co/25x25/cccccc/000000?text=P'),
+        bear: PIXI.Texture.from('https://placehold.co/45x45/e74c3c/000000?text=B'),
+        projectile: PIXI.Texture.from('https://placehold.co/10x10/f1c40f/000000?text=E'),
+        xpOrb: PIXI.Texture.from('./xpOrb.png'),
+    };
+
+    // --- GAME SETTINGS ---
+    const playerStats = {
+        speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 10,
+        attackCooldown: 800, projectileSpeed: 5, projectileDamage: 10,
+        projectileCount: 1, magnetRange: 100,
+        damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 }
+    };
+    
+    // (Upgrade pool remains the same)
+    const upgradePool = [
+        { id: 'attackSpeed', title: 'Быстрые Яйца', description: 'Скорость атаки +20%', apply: () => playerStats.attackCooldown *= 0.8 },
+        { id: 'damage', title: 'Тяжелые Яйца', description: 'Урон +25%', apply: () => playerStats.projectileDamage *= 1.25 },
+        { id: 'speed', title: 'Быстрые Лапки', description: 'Скорость +15%', apply: () => playerStats.speed *= 1.15 },
+        { id: 'health', title: 'Толстая Кожа', description: 'Макс. HP +20, лечит 20%', apply: () => { playerStats.maxHp += 20; player.hp = Math.min(playerStats.maxHp, player.hp + playerStats.maxHp * 0.2); } },
+        { id: 'multishot', title: 'Двойной Залп', description: 'Выпускает +1 снаряд', apply: () => playerStats.projectileCount++ },
+        { id: 'magnet', title: 'Магнит для Гемов', description: 'Дальность сбора опыта +30%', apply: () => playerStats.magnetRange *= 1.3 },
+        { id: 'aura', title: 'Аура Стейкинга', description: 'Наносит урон врагам вокруг', apply: () => { 
+            if (!playerStats.damageAura.active) {
+                playerStats.damageAura.active = true;
+                playerStats.damageAura.damage = 5;
+                playerStats.damageAura.range = 80;
+            } else {
+                playerStats.damageAura.damage *= 1.5;
+                playerStats.damageAura.range *= 1.2;
+            }
+        }},
+    ];
+
+    class Player {
+        constructor(x, y) {
+            this.container = new PIXI.Container();
+            this.container.x = x;
+            this.container.y = y;
+            
+            const chickenSprite = new PIXI.Sprite(textures.chicken);
+            chickenSprite.anchor.set(0.5);
+            this.container.addChild(chickenSprite);
+
+            const frogSprite = new PIXI.Sprite(textures.frog);
+            frogSprite.anchor.set(0.5);
+            this.container.addChild(frogSprite);
+
+            this.hpBar = new PIXI.Graphics();
+            this.container.addChild(this.hpBar);
+            
+            this.aura = new PIXI.Graphics();
+            this.container.addChild(this.aura);
+            
+            worldContainer.addChild(this.container);
+
+            this.hp = playerStats.hp;
+            this.lastAttackTime = 0;
+            this.lastHitTime = 0;
+        }
+
+        get x() { return this.container.x; }
+        get y() { return this.container.y; }
+        get width() { return this.container.width; }
+        get height() { return this.container.height; }
+
+        draw() {
+            // HP bar
+            this.hpBar.clear();
+            this.hpBar.beginFill(0xff0000);
+            this.hpBar.drawRect(-this.width/2, this.height/2 + 5, this.width, 8);
+            this.hpBar.beginFill(0x00ff00);
+            this.hpBar.drawRect(-this.width/2, this.height/2 + 5, this.width * (this.hp / playerStats.maxHp), 8);
+            this.hpBar.endFill();
+
+            // Hit effect
+            const isHit = Date.now() - this.lastHitTime < 200;
+            this.container.alpha = isHit && Math.floor(Date.now() / 50) % 2 === 0 ? 0.5 : 1;
+            
+            // Aura
+            this.aura.clear();
+             if (playerStats.damageAura.active) {
+                this.aura.lineStyle(3, 0x64ff64, 0.5);
+                this.aura.drawCircle(0, 0, playerStats.damageAura.range);
+            }
+        }
+        
+        update(delta) {
+            let moveX = 0, moveY = 0;
+            
+            if (joystickActive) {
+                moveX = joystickDir.x; moveY = joystickDir.y;
+            } else {
+                if (keys['w'] || keys['ArrowUp']) moveY = -1;
+                if (keys['s'] || keys['ArrowDown']) moveY = 1;
+                if (keys['a'] || keys['ArrowLeft']) moveX = -1;
+                if (keys['d'] || keys['ArrowRight']) moveX = 1;
+            }
+
+            if (moveX !== 0 || moveY !== 0) {
+                const length = Math.sqrt(moveX * moveX + moveY * moveY);
+                this.container.x += (moveX / length) * playerStats.speed * delta;
+                this.container.y += (moveY / length) * playerStats.speed * delta;
+            }
+
+            // World bounds
+            this.container.x = Math.max(this.width / 2, Math.min(app.screen.width - this.width / 2, this.container.x));
+            this.container.y = Math.max(this.height / 2, Math.min(app.screen.height - this.height / 2, this.container.y));
+
+            // Attack
+            if (Date.now() - this.lastAttackTime > playerStats.attackCooldown) {
+                this.shoot();
+                this.lastAttackTime = Date.now();
+            }
+
+            // Aura damage
+            if (playerStats.damageAura.active && Date.now() - playerStats.damageAura.lastTick > playerStats.damageAura.cooldown) {
+                enemies.forEach(enemy => {
+                    const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
+                    if (dist < playerStats.damageAura.range + enemy.width/2) {
+                        enemy.takeDamage(playerStats.damageAura.damage);
+                    }
+                });
+                playerStats.damageAura.lastTick = Date.now();
+            }
+
+            this.draw(); // Update graphics objects
+        }
+        
+        shoot() {
+            const nearestEnemy = findNearestEnemy(this.x, this.y);
+            if (!nearestEnemy) return;
+
+            for (let i = 0; i < playerStats.projectileCount; i++) {
+                const angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+                const spread = (Math.random() - 0.5) * 0.3;
+                const dx = Math.cos(angle + spread);
+                const dy = Math.sin(angle + spread);
+                projectiles.push(new Projectile(this.x, this.y, dx, dy, playerStats.projectileSpeed, playerStats.projectileDamage));
+            }
+        }
+        
+        takeDamage(damage) {
+            if (Date.now() - this.lastHitTime > 500) {
+                this.hp -= damage;
+                this.lastHitTime = Date.now();
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    endGame();
+                }
+            }
+        }
+
+        addXp(amount) {
+            playerStats.xp += amount;
+            if (playerStats.xp >= playerStats.xpToNextLevel) {
+                this.levelUp();
+            }
+            xpFill.style.width = `${(playerStats.xp / playerStats.xpToNextLevel) * 100}%`;
+        }
+        
+        levelUp() {
+            playerStats.xp -= playerStats.xpToNextLevel;
+            playerStats.level++;
+            playerStats.xpToNextLevel = Math.floor(playerStats.xpToNextLevel * 1.5);
+            levelText.textContent = playerStats.level;
+            gameState = 'levelup';
+            showLevelUpModal();
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.container);
+        }
+    }
+
+    class Enemy {
+        constructor(x, y, type) {
+            this.type = type;
+            this.lastHitTime = 0;
+            switch(type) {
+                case 'PaperHands':
+                    this.sprite = new PIXI.Sprite(textures.paperHands);
+                    this.speed = 2 + Math.random() * 0.5;
+                    this.hp = 10 + wave * 2;
+                    this.damage = 5;
+                    this.xpValue = 1;
+                    break;
+                case 'Bear':
+                    this.sprite = new PIXI.Sprite(textures.bear);
+                    this.speed = 1 + Math.random() * 0.2;
+                    this.hp = 50 + wave * 10;
+                    this.damage = 15;
+                    this.xpValue = 5;
+                    break;
+            }
+            this.maxHp = this.hp;
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+
+            this.hpBar = new PIXI.Graphics();
+            this.sprite.addChild(this.hpBar);
+            worldContainer.addChild(this.sprite);
+        }
+
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+
+        draw() {
+             // HP bar
+            this.hpBar.clear();
+            if(this.hp < this.maxHp){
+                this.hpBar.beginFill(0xff0000);
+                this.hpBar.drawRect(-this.width/2, -this.height/2 - 8, this.width, 5);
+                this.hpBar.beginFill(0x00ff00);
+                this.hpBar.drawRect(-this.width/2, -this.height/2 - 8, this.width * (this.hp / this.maxHp), 5);
+                this.hpBar.endFill();
+            }
+
+            // Hit effect
+            const isHit = Date.now() - this.lastHitTime < 100;
+            this.sprite.tint = isHit ? 0xFFFFFF : 0xFFFFFF; // White flash
+        }
+
+        update(delta) {
+            const angle = Math.atan2(player.y - this.y, player.x - this.x);
+            this.sprite.x += Math.cos(angle) * this.speed * delta;
+            this.sprite.y += Math.sin(angle) * this.speed * delta;
+            this.draw();
+        }
+
+        takeDamage(damage) {
+            this.hp -= damage;
+            this.lastHitTime = Date.now();
+            if (this.hp <= 0) {
+                killCount++;
+                xpOrbs.push(new XpOrb(this.x, this.y, this.xpValue));
+                // particles.push(...) - can be added here
+                this.destroy();
+                enemies = enemies.filter(e => e !== this);
+            }
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+    
+    // Other classes (Projectile, XpOrb) would be similarly converted to use PIXI.Sprite
+    class Projectile {
+        constructor(x, y, dx, dy, speed, damage) {
+            this.sprite = new PIXI.Sprite(textures.projectile);
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+            worldContainer.addChild(this.sprite);
+
+            this.dx = dx;
+            this.dy = dy;
+            this.speed = speed;
+            this.damage = damage;
+        }
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+        
+        update(delta) {
+            this.sprite.x += this.dx * this.speed * delta;
+            this.sprite.y += this.dy * this.speed * delta;
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+
+     class XpOrb {
+        constructor(x, y, value) {
+            this.sprite = new PIXI.Sprite(textures.xpOrb);
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+            worldContainer.addChild(this.sprite);
+
+            this.value = value;
+            this.speed = 4;
+        }
+
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+
+        update(delta) {
+            const dist = Math.hypot(this.x - player.x, this.y - player.y);
+            if (dist < playerStats.magnetRange) {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.sprite.x += Math.cos(angle) * this.speed * delta;
+                this.sprite.y += Math.sin(angle) * this.speed * delta;
+            }
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+
+    function init() {
+        // Clear containers
+        worldContainer.removeChildren();
+
+        // Reset stats
+        Object.keys(playerStats).forEach(key => {
+            if (typeof playerStats[key] === 'object' && playerStats[key] !== null) {
+                 if(key === 'damageAura') {
+                    playerStats.damageAura.active = false;
+                    playerStats.damageAura.damage = 0;
+                    playerStats.damageAura.range = 0;
+                }
+            } else {
+                const baseStats = {
+                    speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 10,
+                    attackCooldown: 800, projectileSpeed: 5, projectileDamage: 10,
+                    projectileCount: 1, magnetRange: 100,
+                };
+                playerStats[key] = baseStats[key];
+            }
+        });
+        
+        player = new Player(app.screen.width / 2, app.screen.height / 2);
+        enemies = [];
+        projectiles = [];
+        xpOrbs = [];
+        particles = []; // Particle system can be added here
+        gameTime = 0;
+        killCount = 0;
+        wave = 1;
+
+        levelText.textContent = playerStats.level;
+        xpFill.style.width = '0%';
+        
+        gameState = 'playing';
+        startScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+        gameUI.classList.remove('hidden');
+        
+        if (isMobile()) {
+            joystick.classList.remove('hidden');
+        }
+    }
+
+    function gameLoop(delta) {
+        if (gameState === 'playing') {
+            update(delta);
+        }
+    }
+    
+    function update(delta) {
+        gameTime += app.ticker.elapsedMS / 1000;
+        spawnTimer += app.ticker.elapsedMS / 1000;
+        
+        if (spawnTimer > getSpawnInterval()) {
+            spawnEnemies();
+            spawnTimer = 0;
+            wave = Math.floor(gameTime / 30) + 1;
+        }
+        
+        player.update(delta);
+        projectiles.forEach(p => p.update(delta));
+        enemies.forEach(e => e.update(delta));
+        xpOrbs.forEach(orb => orb.update(delta));
+        // particles.forEach(p => p.update(delta));
+
+        checkCollisions();
+
+        // Remove off-screen projectiles
+        projectiles.forEach((p, i) => {
+            if (p.x < 0 || p.x > app.screen.width || p.y < 0 || p.y > app.screen.height) {
+                p.destroy();
+                projectiles.splice(i, 1);
+            }
+        });
+        
+        // UI Update
+        const minutes = Math.floor(gameTime / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(gameTime % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+        killCountDisplay.textContent = killCount;
+    }
+    
+    function checkCollisions() {
+        projectiles.forEach((proj, pIndex) => {
+            enemies.forEach((enemy) => {
+                if (isColliding(proj, enemy)) {
+                    enemy.takeDamage(proj.damage);
+                    proj.destroy();
+                    projectiles.splice(pIndex, 1);
+                }
+            });
+        });
+        
+        enemies.forEach(enemy => {
+            if (isColliding(player, enemy)) {
+                player.takeDamage(enemy.damage);
+            }
+        });
+        
+        xpOrbs.forEach((orb, oIndex) => {
+            if (isColliding(orb, player)) {
+                player.addXp(orb.value);
+                orb.destroy();
+                xpOrbs.splice(oIndex, 1);
+            }
+        });
+    }
+
+    function isColliding(obj1, obj2) {
+        // Simple AABB collision detection
+        const b1 = obj1.sprite ? obj1.sprite.getBounds() : obj1.container.getBounds();
+        const b2 = obj2.sprite ? obj2.sprite.getBounds() : obj2.container.getBounds();
+        return b1.x < b2.x + b2.width &&
+               b1.x + b1.width > b2.x &&
+               b1.y < b2.y + b2.height &&
+               b1.y + b1.height > b2.y;
+    }
+
+    function findNearestEnemy(x, y) {
+        let nearest = null;
+        let nearestDist = Infinity;
+        enemies.forEach(enemy => {
+            const dist = Math.hypot(x - enemy.x, y - enemy.y);
+            if (dist < nearestDist) {
+                nearest = enemy;
+                nearestDist = dist;
+            }
+        });
+        return nearest;
+    }
+    
+    function spawnEnemies() {
+        const numEnemies = Math.floor(1 + wave * 1.5);
+        for (let i = 0; i < numEnemies; i++) {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+            if (edge === 0) { // Top
+                x = Math.random() * app.screen.width; y = -50;
+            } else if (edge === 1) { // Right
+                x = app.screen.width + 50; y = Math.random() * app.screen.height;
+            } else if (edge === 2) { // Bottom
+                x = Math.random() * app.screen.width; y = app.screen.height + 50;
+            } else { // Left
+                x = -50; y = Math.random() * app.screen.height;
+            }
+            const enemyType = (gameTime > 60 && Math.random() < 0.2) ? 'Bear' : 'PaperHands';
+            enemies.push(new Enemy(x, y, enemyType));
+        }
+    }
+    
+    function getSpawnInterval() { return Math.max(0.5, 3 - gameTime / 60); }
+    
+    function endGame() {
+        gameState = 'gameover';
+        finalTime.textContent = timerDisplay.textContent;
+        finalKills.textContent = killCount;
+        gameOverScreen.classList.remove('hidden');
+        gameUI.classList.add('hidden');
+        if (joystick) {
+            joystick.classList.add('hidden');
+        }
+    }
+
+    // showLevelUpModal remains mostly the same as it controls HTML elements
+    function showLevelUpModal() {
+        levelUpModal.classList.remove('hidden');
+        upgradeOptionsContainer.innerHTML = '';
+        let availableUpgrades = [...upgradePool];
+        if(playerStats.projectileCount >= 5) {
+            availableUpgrades = availableUpgrades.filter(u => u.id !== 'multishot');
+        }
+        const chosenUpgrades = [];
+        for (let i = 0; i < 3; i++) {
+            if(availableUpgrades.length === 0) break;
+            const randomIndex = Math.floor(Math.random() * availableUpgrades.length);
+            chosenUpgrades.push(availableUpgrades[randomIndex]);
+            availableUpgrades.splice(randomIndex, 1);
+        }
+        chosenUpgrades.forEach(upgrade => {
+            const btn = document.createElement('button');
+            btn.className = 'upgrade-btn text-left w-full p-4 rounded-lg';
+            btn.innerHTML = `<div class="font-bold text-lg text-green-300">${upgrade.title}</div><div class="text-sm text-gray-200">${upgrade.description}</div>`;
+            btn.onclick = () => {
+                upgrade.apply();
+                levelUpModal.classList.add('hidden');
+                gameState = 'playing';
+            };
+            upgradeOptionsContainer.appendChild(btn);
+        });
+    }
+
+    // Event listeners
+    startButton.addEventListener('click', init);
+    restartButton.addEventListener('click', init);
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    // Mobile controls setup remains the same, but acts on canvas created by Pixi
+    function isMobile() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+    function setupJoystick() {
+        joystick = document.getElementById('joystick');
+        const stick = joystick.querySelector('.joystick-stick');
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            joystickActive = true;
+            joystick.style.left = `${touch.clientX - 60}px`;
+            joystick.style.top = `${touch.clientY - 60}px`;
+            joystickPos = { x: touch.clientX, y: touch.clientY };
+        }
+        function handleMove(e) {
+            if (!joystickActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - joystickPos.x;
+            const deltaY = touch.clientY - joystickPos.y;
+            const dist = Math.hypot(deltaX, deltaY);
+            const maxDist = 60;
+            const clampedDist = Math.min(dist, maxDist);
+            const angle = Math.atan2(deltaY, deltaX);
+            joystickDir.x = Math.cos(angle);
+            joystickDir.y = Math.sin(angle);
+            stick.style.transform = `translate(${Math.cos(angle) * clampedDist}px, ${Math.sin(angle) * clampedDist}px)`;
+        }
+        function handleEnd(e) {
+            joystickActive = false;
+            joystickDir = { x: 0, y: 0 };
+            stick.style.transform = `translate(0px, 0px)`;
+        }
+        
+        app.view.addEventListener('touchstart', handleTouch, { passive: false });
+        app.view.addEventListener('touchmove', handleMove, { passive: false });
+        app.view.addEventListener('touchend', handleEnd, { passive: false });
+    }
+    
+    if(isMobile()) {
+        setupJoystick();
+    }
+
+    app.ticker.add(gameLoop); // Start the game loop
+
+</script>
+</body>
+</html>
+
