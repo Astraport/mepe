@@ -675,7 +675,7 @@
     }
     
     function spawnEnemies() {
-        const numEnemies = Math.floor(1 + wave * 1.5);
+        const numEnemies = Math.floor(1 + wave * 1.2);
         for (let i = 0; i < numEnemies; i++) {
             const edge = Math.floor(Math.random() * 4);
             let x, y;
@@ -696,7 +696,7 @@
         healthPacks.push(new HealthPack(x, y));
     }
     
-    function getSpawnInterval() { return Math.max(0.5, 3 - gameTime / 60); }
+    function getSpawnInterval() { return Math.max(0.6, 4 - gameTime / 70); }
     
     function endGame() {
         gameState = 'gameover';
@@ -709,7 +709,7 @@
         }
     }
 
-    function showLevelUpModal() {
+   function showLevelUpModal() {
         levelUpModal.classList.remove('hidden');
         upgradeOptionsContainer.innerHTML = '';
         let availableUpgrades = [...upgradePool];
@@ -730,7 +730,10 @@
             btn.onclick = () => {
                 upgrade.apply();
                 levelUpModal.classList.add('hidden');
-                gameState = 'playing';
+                // Добавляем паузу в 2 секунды перед возобновлением игры
+                setTimeout(() => {
+                    gameState = 'playing';
+                }, 2000); // 2000 миллисекунд = 2 секунды
             };
             upgradeOptionsContainer.appendChild(btn);
         });
