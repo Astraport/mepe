@@ -201,7 +201,7 @@
         healthPack: PIXI.Texture.from('https://placehold.co/30x30/ffd700/000000?text=HP'), // Аптечка
     };
     
-    // --- SOUNDS ---
+// --- SOUNDS ---
     const sounds = {
         shot: PIXI.sound.Sound.from('https://actions.google.com/sounds/v1/weapons/laser_shot.ogg'),
         enemyDeath: PIXI.sound.Sound.from('https://actions.google.com/sounds/v1/impacts/hit_on_metal.ogg')
@@ -375,19 +375,25 @@
         constructor(x, y, type) {
             this.type = type;
             this.lastHitTime = 0;
+
+            // -- Inertia properties --
+            this.currentAngle = Math.atan2(player.y - y, player.x - x);
+            this.turnSpeed = 0.05; // Lower is more inertia
+            // ------------------------
+
             switch(type) {
                 case 'PaperHands':
                     this.sprite = new PIXI.Sprite(textures.paperHands);
                     this.speed = 2 + Math.random() * 0.5;
                     this.hp = 10 + wave * 2;
-                    this.damage = 3;
+                    this.damage = 5;
                     this.xpValue = 1;
                     break;
                 case 'Bear':
                     this.sprite = new PIXI.Sprite(textures.bear);
                     this.speed = 1 + Math.random() * 0.2;
                     this.hp = 50 + wave * 10;
-                    this.damage = 10;
+                    this.damage = 15;
                     this.xpValue = 5;
                     break;
             }
@@ -420,9 +426,22 @@
         }
 
         update(delta) {
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            this.sprite.x += Math.cos(angle) * this.speed * delta;
-            this.sprite.y += Math.sin(angle) * this.speed * delta;
+            // -- New Inertia-based movement --
+            const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+            
+            // Find the shortest way to turn
+            let angleDiff = targetAngle - this.currentAngle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+            // Gradually turn towards the target angle
+            this.currentAngle += angleDiff * this.turnSpeed * delta;
+
+            // Move in the current direction
+            this.sprite.x += Math.cos(this.currentAngle) * this.speed * delta;
+            this.sprite.y += Math.sin(this.currentAngle) * this.speed * delta;
+            // ---------------------------------
+            
             this.draw();
         }
 
@@ -696,7 +715,7 @@
         healthPacks.push(new HealthPack(x, y));
     }
     
-    function getSpawnInterval() { return Math.max(0.6, 4 - gameTime / 70); }
+    function getSpawnInterval() { return Math.max(0.8, 4 - gameTime / 75); }
     
     function endGame() {
         gameState = 'gameover';
@@ -709,7 +728,7 @@
         }
     }
 
-   function showLevelUpModal() {
+    function showLevelUpModal() {
         levelUpModal.classList.remove('hidden');
         upgradeOptionsContainer.innerHTML = '';
         let availableUpgrades = [...upgradePool];
@@ -730,17 +749,23 @@
             btn.onclick = () => {
                 upgrade.apply();
                 levelUpModal.classList.add('hidden');
-                // Добавляем паузу в 2 секунды перед возобновлением игры
                 setTimeout(() => {
                     gameState = 'playing';
-                }, 2000); // 2000 миллисекунд = 2 секунды
+                }, 2000);
             };
             upgradeOptionsContainer.appendChild(btn);
         });
     }
 
     // Event listeners
-    startButton.addEventListener('click', init);
+    startButton.addEventListener('click', () => {
+        // --- Sound fix ---
+        if (PIXI.sound.context.state === 'suspended') {
+            PIXI.sound.context.resume();
+        }
+        // -----------------
+        init();
+    });
     restartButton.addEventListener('click', init);
     window.addEventListener('keydown', e => keys[e.key] = true);
     window.addEventListener('keyup', e => keys[e.key] = false);
@@ -793,4 +818,3 @@
 </script>
 </body>
 </html>
-
