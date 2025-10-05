@@ -386,14 +386,14 @@
                     this.sprite = new PIXI.Sprite(textures.paperHands);
                     this.speed = 2 + Math.random() * 0.5;
                     this.hp = 10 + wave * 2;
-                    this.damage = 5;
+                    this.damage = 3;
                     this.xpValue = 1;
                     break;
                 case 'Bear':
                     this.sprite = new PIXI.Sprite(textures.bear);
                     this.speed = 1 + Math.random() * 0.2;
                     this.hp = 50 + wave * 10;
-                    this.damage = 15;
+                    this.damage = 10;
                     this.xpValue = 5;
                     break;
             }
@@ -694,7 +694,7 @@
     }
     
     function spawnEnemies() {
-        const numEnemies = Math.floor(1 + wave * 1.2);
+        const numEnemies = Math.floor(1 + wave * 1.1);
         for (let i = 0; i < numEnemies; i++) {
             const edge = Math.floor(Math.random() * 4);
             let x, y;
