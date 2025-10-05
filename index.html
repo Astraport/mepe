@@ -378,13 +378,13 @@
 
             // -- Inertia properties --
             this.currentAngle = Math.atan2(player.y - y, player.x - x);
-            this.turnSpeed = 0.05; // Lower is more inertia
+            this.turnSpeed = 0.04; // Lower is more inertia
             // ------------------------
 
             switch(type) {
                 case 'PaperHands':
                     this.sprite = new PIXI.Sprite(textures.paperHands);
-                    this.speed = 2 + Math.random() * 0.5;
+                    this.speed = 2 + Math.random() * 0.4;
                     this.hp = 10 + wave * 2;
                     this.damage = 3;
                     this.xpValue = 1;
