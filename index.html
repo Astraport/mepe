@@ -187,6 +187,7 @@
     let spawnTimer = 0;
     let healthPackSpawnTimer = 0;
     let nextHealthPackSpawnTime = 0;
+    let firstHealthPackSpawned = false;
     let wave = 1;
 
     let joystick, joystickActive = false, joystickPos = {x: 0, y: 0}, joystickDir = {x: 0, y: 0};
@@ -201,13 +202,18 @@
         healthPack: PIXI.Texture.from('health.png'), // Аптечка
     };
     
-// --- SOUNDS ---
+    // --- SOUNDS ---
     const sounds = {
-        shot: PIXI.sound.Sound.from('https://actions.google.com/sounds/v1/weapons/laser_shot.ogg'),
-        enemyDeath: PIXI.sound.Sound.from('https://actions.google.com/sounds/v1/impacts/hit_on_metal.ogg')
+        shot: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/laser2.wav'),
+        enemyDeath: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/explosion.wav'),
+        heal: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/magical_power_up.wav'),
+        xp: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/key.wav'),
     };
-    sounds.shot.volume = 0.3;
-    sounds.enemyDeath.volume = 0.5;
+    sounds.shot.volume = 0.2;
+    sounds.enemyDeath.volume = 0.4;
+    sounds.heal.volume = 0.5;
+    sounds.xp.volume = 0.3;
+
 
     // --- GAME SETTINGS ---
     const playerStats = {
@@ -300,6 +306,16 @@
                 this.sprite.y += (moveY / length) * playerStats.speed * delta;
             }
 
+            // Flip sprite based on horizontal movement
+            if (moveX > 0.1) {
+                this.sprite.scale.x = -1;
+            } else if (moveX < -0.1) {
+                this.sprite.scale.x = 1;
+            }
+            // Counter-flip children so they appear normal
+            this.hpBar.scale.x = this.sprite.scale.x;
+            this.aura.scale.x = this.sprite.scale.x;
+
             // World bounds
             this.sprite.x = Math.max(this.width / 2, Math.min(app.screen.width - this.width / 2, this.sprite.x));
             this.sprite.y = Math.max(this.height / 2, Math.min(app.screen.height - this.height / 2, this.sprite.y));
@@ -350,6 +366,7 @@
         }
 
         addXp(amount) {
+            sounds.xp.play();
             playerStats.xp += amount;
             if (playerStats.xp >= playerStats.xpToNextLevel) {
                 this.levelUp();
@@ -376,24 +393,22 @@
             this.type = type;
             this.lastHitTime = 0;
 
-            // -- Inertia properties --
             this.currentAngle = Math.atan2(player.y - y, player.x - x);
-            this.turnSpeed = 0.04; // Lower is more inertia
-            // ------------------------
+            this.turnSpeed = 0.05;
 
             switch(type) {
                 case 'PaperHands':
                     this.sprite = new PIXI.Sprite(textures.paperHands);
-                    this.speed = 2 + Math.random() * 0.4;
+                    this.speed = 2 + Math.random() * 0.5;
                     this.hp = 10 + wave * 2;
-                    this.damage = 3;
+                    this.damage = 5;
                     this.xpValue = 1;
                     break;
                 case 'Bear':
                     this.sprite = new PIXI.Sprite(textures.bear);
                     this.speed = 1 + Math.random() * 0.2;
                     this.hp = 50 + wave * 10;
-                    this.damage = 10;
+                    this.damage = 15;
                     this.xpValue = 5;
                     break;
             }
@@ -426,21 +441,25 @@
         }
 
         update(delta) {
-            // -- New Inertia-based movement --
             const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
             
-            // Find the shortest way to turn
             let angleDiff = targetAngle - this.currentAngle;
             while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
             while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
-            // Gradually turn towards the target angle
             this.currentAngle += angleDiff * this.turnSpeed * delta;
 
-            // Move in the current direction
             this.sprite.x += Math.cos(this.currentAngle) * this.speed * delta;
             this.sprite.y += Math.sin(this.currentAngle) * this.speed * delta;
-            // ---------------------------------
+            
+            // Flip sprite
+            const horizontalDirection = Math.cos(this.currentAngle);
+            if (horizontalDirection > 0) {
+                this.sprite.scale.x = -1;
+            } else if (horizontalDirection < 0) {
+                this.sprite.scale.x = 1;
+            }
+            this.hpBar.scale.x = this.sprite.scale.x;
             
             this.draw();
         }
@@ -569,7 +588,8 @@
         killCount = 0;
         wave = 1;
         healthPackSpawnTimer = 0;
-        nextHealthPackSpawnTime = 10 + Math.random() * 5;
+        nextHealthPackSpawnTime = 15 + Math.random() * 5;
+        firstHealthPackSpawned = false;
 
         levelText.textContent = playerStats.level;
         xpFill.style.width = '0%';
@@ -601,10 +621,16 @@
             wave = Math.floor(gameTime / 30) + 1;
         }
 
-        if (healthPackSpawnTimer > nextHealthPackSpawnTime) {
+        const canSpawnFirstTime = !firstHealthPackSpawned && player && player.hp < playerStats.maxHp * 0.8;
+        const canSpawnRegularly = firstHealthPackSpawned && healthPackSpawnTimer > nextHealthPackSpawnTime;
+
+        if (canSpawnFirstTime || canSpawnRegularly) {
             spawnHealthPack();
             healthPackSpawnTimer = 0;
-            nextHealthPackSpawnTime = 10 + Math.random() * 5;
+            nextHealthPackSpawnTime = 15 + Math.random() * 5;
+            if (canSpawnFirstTime) {
+                firstHealthPackSpawned = true;
+            }
         }
         
         player.update(delta);
@@ -663,6 +689,7 @@
         for (let i = healthPacks.length - 1; i >= 0; i--) {
             const pack = healthPacks[i];
             if (isColliding(player, pack)) {
+                sounds.heal.play();
                 player.hp = Math.min(playerStats.maxHp, player.hp + pack.healAmount);
                 pack.destroy();
                 healthPacks.splice(i, 1);
@@ -694,7 +721,7 @@
     }
     
     function spawnEnemies() {
-        const numEnemies = Math.floor(1 + wave * 1.1);
+        const numEnemies = Math.floor(1 + wave * 1.2);
         for (let i = 0; i < numEnemies; i++) {
             const edge = Math.floor(Math.random() * 4);
             let x, y;
@@ -708,10 +735,11 @@
     }
     
     function spawnHealthPack() {
-        if (healthPacks.length > 0) return; // Спавним только одну аптечку за раз
-        const padding = 50;
-        const x = padding + Math.random() * (app.screen.width - padding * 2);
-        const y = padding + Math.random() * (app.screen.height - padding * 2);
+        if (healthPacks.length > 2) return;
+        const topPadding = 100;
+        const sidePadding = 50;
+        const x = sidePadding + Math.random() * (app.screen.width - sidePadding * 2);
+        const y = topPadding + Math.random() * (app.screen.height - topPadding - sidePadding);
         healthPacks.push(new HealthPack(x, y));
     }
     
@@ -759,11 +787,9 @@
 
     // Event listeners
     startButton.addEventListener('click', () => {
-        // --- Sound fix ---
         if (PIXI.sound.context.state === 'suspended') {
             PIXI.sound.context.resume();
         }
-        // -----------------
         init();
     });
     restartButton.addEventListener('click', init);
@@ -818,3 +844,4 @@
 </script>
 </body>
 </html>
+

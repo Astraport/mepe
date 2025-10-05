@@ -384,7 +384,7 @@
             switch(type) {
                 case 'PaperHands':
                     this.sprite = new PIXI.Sprite(textures.paperHands);
-                    this.speed = 2 + Math.random() * 0.5;
+                    this.speed = 2 + Math.random() * 0.4;
                     this.hp = 10 + wave * 2;
                     this.damage = 3;
                     this.xpValue = 1;
