@@ -247,26 +247,26 @@ class Enemy {
         switch(type) {
             case 'PaperHands':
                 this.sprite = new PIXI.Sprite(textures.paperHands);
-                this.speed = 2.2 + Math.random() * 0.8;
-                this.hp = 12 + wave * 3;
-                this.damage = 4;
+                this.speed = 1.8 + Math.random() * 0.6;
+                this.hp = 20 + wave * 5;
+                this.damage = 8;
                 this.xpValue = 1;
                 this.scoreValue = 10;
                 break;
             case 'Bear':
                 this.sprite = new PIXI.Sprite(textures.bear);
-                this.speed = 1.2 + Math.random() * 0.4;
-                this.hp = 60 + wave * 15;
-                this.damage = 12;
-                this.xpValue = 5;
+                this.speed = 1.0 + Math.random() * 0.3;
+                this.hp = 80 + wave * 20;
+                this.damage = 15;
+                this.xpValue = 3;
                 this.scoreValue = 50;
                 break;
             case 'Whale':
                 this.sprite = new PIXI.Sprite(textures.whale);
-                this.speed = 0.8 + Math.random() * 0.3;
-                this.hp = 120 + wave * 25;
-                this.damage = 20;
-                this.xpValue = 10;
+                this.speed = 0.6 + Math.random() * 0.2;
+                this.hp = 160 + wave * 35;
+                this.damage = 25;
+                this.xpValue = 5;
                 this.scoreValue = 100;
                 break;
         }
@@ -675,7 +675,7 @@ class Particle {
                 break;
             case 'levelUp':
                 this.sprite.beginFill(0xffd700, alpha);
-                this.sprite.drawStar(0, 0, 5, 8, 4);
+                this.drawStar(0, 0, 8, 5);
                 break;
             case 'shieldBreak':
                 this.sprite.beginFill(0x0066ff, alpha);
@@ -700,6 +700,27 @@ class Particle {
         }
         
         this.draw();
+    }
+    
+    drawStar(x, y, outerRadius, points) {
+        const innerRadius = outerRadius * 0.4;
+        const angleStep = Math.PI / points;
+        
+        this.sprite.moveTo(
+            x + Math.cos(-Math.PI / 2) * outerRadius,
+            y + Math.sin(-Math.PI / 2) * outerRadius
+        );
+        
+        for (let i = 1; i <= points * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = -Math.PI / 2 + i * angleStep;
+            this.sprite.lineTo(
+                x + Math.cos(angle) * radius,
+                y + Math.sin(angle) * radius
+            );
+        }
+        
+        this.sprite.closePath();
     }
     
     destroy() {
@@ -782,13 +803,13 @@ function init() {
 
     // Reset stats
     Object.assign(playerStats, {
-        speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 15,
-        attackCooldown: 600, projectileSpeed: 6, projectileDamage: 15,
-        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2,
+        speed: 2.5, maxHp: 80, hp: 80, level: 1, xp: 0, xpToNextLevel: 25,
+        attackCooldown: 800, projectileSpeed: 5, projectileDamage: 12,
+        projectileCount: 1, magnetRange: 100, critChance: 0.03, critMultiplier: 1.8,
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false,
         comboMaster: false,
-        damageAura: { active: false, damage: 0, range: 0, cooldown: 800, lastTick: 0 },
-        shield: { active: false, hp: 0, maxHp: 0, regenRate: 5, lastRegen: 0 }
+        damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 },
+        shield: { active: false, hp: 0, maxHp: 0, regenRate: 3, lastRegen: 0 }
     });
     
     player = new Player(app.screen.width / 2, app.screen.height / 2);
