@@ -248,24 +248,24 @@ class Enemy {
             case 'PaperHands':
                 this.sprite = new PIXI.Sprite(textures.paperHands);
                 this.speed = 1.8 + Math.random() * 0.6;
-                this.hp = 20 + wave * 5;
-                this.damage = 8;
+                this.hp = 10 + wave * 5;
+                this.damage = 5;
                 this.xpValue = 1;
                 this.scoreValue = 10;
                 break;
             case 'Bear':
                 this.sprite = new PIXI.Sprite(textures.bear);
                 this.speed = 1.0 + Math.random() * 0.3;
-                this.hp = 80 + wave * 20;
-                this.damage = 15;
+                this.hp = 30 + wave * 20;
+                this.damage = 10;
                 this.xpValue = 3;
                 this.scoreValue = 50;
                 break;
             case 'Whale':
                 this.sprite = new PIXI.Sprite(textures.whale);
                 this.speed = 0.6 + Math.random() * 0.2;
-                this.hp = 160 + wave * 35;
-                this.damage = 25;
+                this.hp = 60 + wave * 35;
+                this.damage = 20;
                 this.xpValue = 5;
                 this.scoreValue = 100;
                 break;
@@ -803,9 +803,9 @@ function init() {
 
     // Reset stats
     Object.assign(playerStats, {
-        speed: 2.5, maxHp: 80, hp: 80, level: 1, xp: 0, xpToNextLevel: 25,
-        attackCooldown: 800, projectileSpeed: 5, projectileDamage: 12,
-        projectileCount: 1, magnetRange: 100, critChance: 0.03, critMultiplier: 1.8,
+        speed: 3.2, maxHp: 80, hp: 80, level: 1, xp: 0, xpToNextLevel: 20,
+        attackCooldown: 600, projectileSpeed: 5, projectileDamage: 18,
+        projectileCount: 1, magnetRange: 130, critChance: 0.08, critMultiplier: 2.2,
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false,
         comboMaster: false,
         damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 },

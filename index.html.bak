@@ -323,27 +323,44 @@
 
     let joystick, joystickActive = false, joystickPos = {x: 0, y: 0}, joystickDir = {x: 0, y: 0};
 
-    // --- ENHANCED GAME ASSETS ---
+    // --- GAME ASSETS (USER PROVIDED WITH FALLBACKS) ---
     const textures = {
-        player: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="#2ecc71" rx="4"/><rect x="4" y="4" width="24" height="24" fill="#27ae60" rx="2"/><circle cx="12" cy="12" r="3" fill="#fff"/><circle cx="20" cy="12" r="3" fill="#fff"/><rect x="8" y="20" width="16" height="4" fill="#fff" rx="2"/></svg>')),
-        paperHands: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="#e74c3c" rx="4"/><rect x="4" y="4" width="24" height="24" fill="#c0392b" rx="2"/><circle cx="12" cy="12" r="2" fill="#000"/><circle cx="20" cy="12" r="2" fill="#000"/><rect x="8" y="22" width="16" height="2" fill="#000" rx="1"/></svg>')),
-        bear: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="#8b4513" rx="4"/><rect x="2" y="2" width="28" height="28" fill="#654321" rx="4"/><circle cx="10" cy="10" r="2" fill="#ff0000"/><circle cx="22" cy="10" r="2" fill="#ff0000"/><polygon points="16,20 12,24 20,24" fill="#000"/></svg>')),
-        whale: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="16" rx="24" ry="16" fill="#4a90e2"/><ellipse cx="24" cy="16" rx="20" ry="12" fill="#357abd"/><circle cx="16" cy="12" r="3" fill="#fff"/><circle cx="32" cy="12" r="3" fill="#fff"/><polygon points="8,16 0,8 0,24" fill="#357abd"/></svg>')),
-        boss: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="#722f37" rx="8"/><rect x="8" y="8" width="48" height="48" fill="#8b2635" rx="4"/><circle cx="20" cy="20" r="4" fill="#ff0000"/><circle cx="44" cy="20" r="4" fill="#ff0000"/><rect x="16" y="40" width="32" height="8" fill="#000" rx="2"/><polygon points="32,8 24,0 40,0" fill="#ff6b6b"/></svg>')),
-        projectile: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="4" fill="#f1c40f"/><circle cx="4" cy="4" r="2" fill="#fff"/></svg>')),
-        xpOrb: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8" fill="#00ff00"/><circle cx="8" cy="8" r="5" fill="#32ff32"/><circle cx="8" cy="8" r="2" fill="#fff"/></svg>')),
-        healthPack: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="20" fill="#e74c3c" rx="2"/><rect x="2" y="2" width="16" height="16" fill="#c0392b" rx="1"/><rect x="8" y="4" width="4" height="12" fill="#fff"/><rect x="4" y="8" width="12" height="4" fill="#fff"/></svg>')),
+        player: PIXI.Texture.from('frog.png'), // Единый спрайт игрока
+        paperHands: PIXI.Texture.from('bull.png'),
+        bear: PIXI.Texture.from('bear.png'),
+        whale: PIXI.Texture.from('whale.png'),
+        boss: PIXI.Texture.from('boss.png'),
+        projectile: PIXI.Texture.from('https://placehold.co/10x10/f1c40f/000000'),
+        xpOrb: PIXI.Texture.from('xp.png'),
+        healthPack: PIXI.Texture.from('health.png'), // Аптечка
     };
     
-    // --- ENHANCED SOUNDS ---
+    // Fallback textures if user files fail to load
+    const fallbackTextures = {
+        whale: 'data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="16" rx="24" ry="16" fill="#4a90e2"/><ellipse cx="24" cy="16" rx="20" ry="12" fill="#357abd"/><circle cx="16" cy="12" r="3" fill="#fff"/><circle cx="32" cy="12" r="3" fill="#fff"/><polygon points="8,16 0,8 0,24" fill="#357abd"/></svg>'),
+        boss: 'data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="#722f37" rx="8"/><rect x="8" y="8" width="48" height="48" fill="#8b2635" rx="4"/><circle cx="20" cy="20" r="4" fill="#ff0000"/><circle cx="44" cy="20" r="4" fill="#ff0000"/><rect x="16" y="40" width="32" height="8" fill="#000" rx="2"/><polygon points="32,8 24,0 40,0" fill="#ff6b6b"/></svg>')
+    };
+    
+    // Error handling for missing textures
+    Object.keys(textures).forEach(key => {
+        if (key === 'whale' || key === 'boss') {
+            textures[key].baseTexture.on('error', () => {
+                if (fallbackTextures[key]) {
+                    textures[key] = PIXI.Texture.from(fallbackTextures[key]);
+                }
+            });
+        }
+    });
+    
+    // --- SOUNDS (USER PROVIDED) ---
     const sounds = {
-        shot: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i+Y6w'),
-        enemyDeath: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRlIEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YS4EAACFhYiFbF1fdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOAgZaLvt559NEwxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8Lv'),
-        heal: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRmQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAEAACFhYiFbF1fdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOAgZaLvt559NEwxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i'),
-        xp: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRiQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAEAAB9hX+FbFt9dJBhNjVgodDbq2EcBTyY2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i'),
-        levelUp: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRjIEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4EAACFhYiFbFtfdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i'),
-        bossWarning: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRjwEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRgEAACFhYiFbF1fdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2igauBhYB9hH+FbFt9dJBhNjVgodDbq2E'),
-        combo: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRiYEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQIEAAB9hX+FbFt9dJBhNjVgodDbq2EcBTyY2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i')
+        shot: PIXI.sound.Sound.from('hitHurt.wav'),
+        enemyDeath: PIXI.sound.Sound.from('powerUp.wav'),
+        heal: PIXI.sound.Sound.from('pickupCoin.wav'),
+        xp: PIXI.sound.Sound.from('key.wav'),
+        levelUp: PIXI.sound.Sound.from('powerUp.wav'), // Используем powerUp для levelUp
+        bossWarning: PIXI.sound.Sound.from('hitHurt.wav'), // Используем hitHurt для предупреждения
+        combo: PIXI.sound.Sound.from('key.wav') // Используем key для комбо
     };
 
     // Set volumes
@@ -351,13 +368,13 @@
         sound.volume = 0.3;
     });
 
-    // --- ENHANCED GAME SETTINGS ---
+    // --- ENHANCED GAME SETTINGS (REBALANCED) ---
     const playerStats = {
-        speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 15,
-        attackCooldown: 600, projectileSpeed: 6, projectileDamage: 15,
-        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2,
-        damageAura: { active: false, damage: 0, range: 0, cooldown: 800, lastTick: 0 },
-        shield: { active: false, hp: 0, maxHp: 0, regenRate: 5, lastRegen: 0 },
+        speed: 2.5, maxHp: 80, hp: 80, level: 1, xp: 0, xpToNextLevel: 25,
+        attackCooldown: 800, projectileSpeed: 5, projectileDamage: 12,
+        projectileCount: 1, magnetRange: 100, critChance: 0.03, critMultiplier: 1.8,
+        damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 },
+        shield: { active: false, hp: 0, maxHp: 0, regenRate: 3, lastRegen: 0 },
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false
     };
     
