@@ -217,7 +217,7 @@ class Player {
         sounds.levelUp.play();
         playerStats.xp -= playerStats.xpToNextLevel;
         playerStats.level++;
-        playerStats.xpToNextLevel = Math.floor(playerStats.xpToNextLevel * 1.4);
+        playerStats.xpToNextLevel = Math.floor(playerStats.xpToNextLevel * 1.25);
         levelText.textContent = playerStats.level;
         
         // Level up particles
@@ -813,7 +813,7 @@ function init() {
 
     // Reset stats
     Object.assign(playerStats, {
-        speed: 3.0, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 22,
+        speed: 3.0, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 50,
         attackCooldown: 700, projectileSpeed: 5.5, projectileDamage: 15,
         projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2.0,
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false,

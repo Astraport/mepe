@@ -370,11 +370,11 @@
 
     // --- ENHANCED GAME SETTINGS (REBALANCED) ---
     const playerStats = {
-        speed: 2.5, maxHp: 80, hp: 80, level: 1, xp: 0, xpToNextLevel: 25,
-        attackCooldown: 800, projectileSpeed: 5, projectileDamage: 12,
-        projectileCount: 1, magnetRange: 100, critChance: 0.03, critMultiplier: 1.8,
-        damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 },
-        shield: { active: false, hp: 0, maxHp: 0, regenRate: 3, lastRegen: 0 },
+        speed: 3.0, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 22,
+        attackCooldown: 700, projectileSpeed: 5.5, projectileDamage: 15,
+        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2.0,
+        damageAura: { active: false, damage: 0, range: 0, cooldown: 900, lastTick: 0 },
+        shield: { active: false, hp: 0, maxHp: 0, regenRate: 4, lastRegen: 0 },
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false
     };
     

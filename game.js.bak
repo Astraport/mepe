@@ -247,26 +247,26 @@ class Enemy {
         switch(type) {
             case 'PaperHands':
                 this.sprite = new PIXI.Sprite(textures.paperHands);
-                this.speed = 1.8 + Math.random() * 0.6;
-                this.hp = 10 + wave * 5;
-                this.damage = 5;
-                this.xpValue = 1;
+                this.speed = 1.5 + Math.random() * 0.5;
+                this.hp = 15 + wave * 3;
+                this.damage = 6;
+                this.xpValue = 2;
                 this.scoreValue = 10;
                 break;
             case 'Bear':
                 this.sprite = new PIXI.Sprite(textures.bear);
-                this.speed = 1.0 + Math.random() * 0.3;
-                this.hp = 30 + wave * 20;
+                this.speed = 0.8 + Math.random() * 0.3;
+                this.hp = 50 + wave * 12;
                 this.damage = 10;
-                this.xpValue = 3;
+                this.xpValue = 4;
                 this.scoreValue = 50;
                 break;
             case 'Whale':
                 this.sprite = new PIXI.Sprite(textures.whale);
-                this.speed = 0.6 + Math.random() * 0.2;
-                this.hp = 60 + wave * 35;
-                this.damage = 20;
-                this.xpValue = 5;
+                this.speed = 0.5 + Math.random() * 0.2;
+                this.hp = 100 + wave * 20;
+                this.damage = 18;
+                this.xpValue = 8;
                 this.scoreValue = 100;
                 break;
         }
@@ -519,17 +519,27 @@ class Projectile {
         
         // Homing behavior
         if (playerStats.homingShots && this.target && this.lifetime > 10) {
-            const targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-            const currentAngle = Math.atan2(this.dy, this.dx);
+            // Check if target is still alive and valid
+            const isTargetValid = enemies.includes(this.target) || bosses.includes(this.target);
             
-            let angleDiff = targetAngle - currentAngle;
-            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            if (!isTargetValid) {
+                // Find new target
+                this.target = findNearestEnemy(this.x, this.y);
+            }
             
-            const turnSpeed = 0.1;
-            const newAngle = currentAngle + angleDiff * turnSpeed;
-            this.dx = Math.cos(newAngle);
-            this.dy = Math.sin(newAngle);
+            if (this.target && isTargetValid) {
+                const targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+                const currentAngle = Math.atan2(this.dy, this.dx);
+                
+                let angleDiff = targetAngle - currentAngle;
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                
+                const turnSpeed = 0.1;
+                const newAngle = currentAngle + angleDiff * turnSpeed;
+                this.dx = Math.cos(newAngle);
+                this.dy = Math.sin(newAngle);
+            }
         }
         
         this.sprite.x += this.dx * this.speed * delta;
@@ -803,13 +813,13 @@ function init() {
 
     // Reset stats
     Object.assign(playerStats, {
-        speed: 3.2, maxHp: 80, hp: 80, level: 1, xp: 0, xpToNextLevel: 20,
-        attackCooldown: 600, projectileSpeed: 5, projectileDamage: 18,
-        projectileCount: 1, magnetRange: 130, critChance: 0.08, critMultiplier: 2.2,
+        speed: 3.0, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 22,
+        attackCooldown: 700, projectileSpeed: 5.5, projectileDamage: 15,
+        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2.0,
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false,
         comboMaster: false,
-        damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 },
-        shield: { active: false, hp: 0, maxHp: 0, regenRate: 3, lastRegen: 0 }
+        damageAura: { active: false, damage: 0, range: 0, cooldown: 900, lastTick: 0 },
+        shield: { active: false, hp: 0, maxHp: 0, regenRate: 4, lastRegen: 0 }
     });
     
     player = new Player(app.screen.width / 2, app.screen.height / 2);
@@ -1095,8 +1105,15 @@ function spawnEnemies() {
         else { x = -60; y = Math.random() * app.screen.height; }
         
         let enemyType = 'PaperHands';
-        if (gameTime > 120 && Math.random() < 0.25) enemyType = 'Bear';
-        if (gameTime > 240 && Math.random() < 0.15) enemyType = 'Whale';
+        // Более постепенное появление врагов
+        if (gameTime > 30 && Math.random() < 0.3) enemyType = 'Bear';
+        if (gameTime > 90 && Math.random() < 0.2) enemyType = 'Whale';
+        // После 3 минут увеличиваем шансы более сильных врагов
+        if (gameTime > 180) {
+            const rand = Math.random();
+            if (rand < 0.1) enemyType = 'Whale';
+            else if (rand < 0.4) enemyType = 'Bear';
+        }
         
         enemies.push(new Enemy(x, y, enemyType));
     }
@@ -1210,9 +1227,28 @@ function showLevelUpModal() {
         btn.onclick = () => {
             upgrade.apply();
             levelUpModal.classList.add('hidden');
+            
+            // Показать сообщение о паузе
+            const pauseMessage = document.createElement('div');
+            pauseMessage.style.cssText = `
+                position: absolute; 
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%);
+                font-size: 2em; 
+                color: #ffff00; 
+                text-shadow: 2px 2px 4px #000;
+                z-index: 1000;
+                pointer-events: none;
+            `;
+            pauseMessage.textContent = 'Приготовьтесь...';
+            gameContainer.appendChild(pauseMessage);
+            
+            // Убрать сообщение и возобновить игру через 1 секунду
             setTimeout(() => {
+                gameContainer.removeChild(pauseMessage);
                 gameState = 'playing';
-            }, 100);
+            }, 1000);
         };
         upgradeOptionsContainer.appendChild(btn);
     });
