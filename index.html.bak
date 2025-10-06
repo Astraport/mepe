@@ -204,10 +204,10 @@
     
     // --- SOUNDS ---
     const sounds = {
-        shot: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/laser2.wav'),
-        enemyDeath: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/explosion.wav'),
-        heal: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/magical_power_up.wav'),
-        xp: PIXI.sound.Sound.from('https://cdn.jsdelivr.net/gh/photonstorm/phaser-examples/examples/assets/audio/SoundEffects/key.wav'),
+        shot: PIXI.sound.Sound.from('hitHurt.wav'),
+        enemyDeath: PIXI.sound.Sound.from('powerUp.wav'),
+        heal: PIXI.sound.Sound.from('pickupCoin.wav'),
+        xp: PIXI.sound.Sound.from('key.wav'),
     };
     sounds.shot.volume = 0.2;
     sounds.enemyDeath.volume = 0.4;
