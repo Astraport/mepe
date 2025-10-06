@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUD Arena Survivor - Enhanced</title>
+    <title>FUD Arena Survivor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -13,174 +13,97 @@
     <style>
         body {
             font-family: 'Press Start 2P', cursive;
-            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            background-color: #1a1a1a;
             color: #ffffff;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* Disable panning and zooming on mobile */
         }
         canvas {
             cursor: none;
             display: block;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }
         .ui-element {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(50, 50, 50, 0.5));
+            background-color: rgba(0, 0, 0, 0.5);
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 2px solid #444;
-            text-shadow: 2px 2px 4px #000;
-            backdrop-filter: blur(5px);
+            text-shadow: 2px 2px #000;
         }
         #xpBar {
             width: 100%;
-            height: 24px;
-            background: linear-gradient(90deg, #333, #555);
-            border-radius: 12px;
+            height: 20px;
+            background-color: #444;
+            border-radius: 5px;
             overflow: hidden;
-            border: 2px solid #666;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            border: 2px solid #555;
         }
         #xpFill {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #33ff33, #66ff66);
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px rgba(51, 255, 51, 0.5);
+            background-color: #33ff33;
+            transition: width 0.2s;
         }
-        #levelUpModal, #gameOverScreen, #startScreen, #pauseScreen {
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(40, 40, 40, 0.9));
-            border: 4px solid #666;
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
+        #levelUpModal, #gameOverScreen, #startScreen {
+            background-color: rgba(20, 20, 20, 0.9);
+            border: 4px solid #555;
         }
         .upgrade-btn, .action-btn {
-            background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+            background-color: #3a3a3a;
             border: 2px solid #555;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px #222;
         }
         .upgrade-btn:hover, .action-btn:hover {
-            background: linear-gradient(135deg, #4a4a4a, #3a3a3a);
+            background-color: #4a4a4a;
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-            border-color: #777;
+            box-shadow: 0 6px #222;
         }
         .upgrade-btn:active, .action-btn:active {
             transform: translateY(2px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px #222;
         }
         .joystick-base {
             position: absolute;
             width: 120px;
             height: 120px;
-            background: rgba(80, 80, 80, 0.6);
+            background: rgba(80, 80, 80, 0.4);
             border-radius: 50%;
             bottom: 40px;
             left: 40px;
-            border: 3px solid rgba(200, 200, 200, 0.3);
         }
         .joystick-stick {
             position: absolute;
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, rgba(150, 150, 150, 0.8), rgba(120, 120, 120, 0.6));
+            background: rgba(120, 120, 120, 0.6);
             border-radius: 50%;
             top: 30px;
             left: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .combo-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2em;
-            color: #ffff00;
-            text-shadow: 2px 2px 4px #000;
-            animation: comboFade 2s ease-out forwards;
-            pointer-events: none;
-        }
-        @keyframes comboFade {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
-            100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
-        }
-        .settings-panel {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid #444;
-        }
-        .volume-slider {
-            width: 100px;
-            margin: 5px 0;
-        }
-        #bossWarning {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 3em;
-            color: #ff0000;
-            text-shadow: 2px 2px 4px #000;
-            animation: bossWarning 3s ease-in-out;
-            pointer-events: none;
-        }
-        @keyframes bossWarning {
-            0%, 100% { opacity: 0; transform: translateX(-50%) scale(0.5); }
-            50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
         }
     </style>
 </head>
 <body class="w-screen h-screen flex items-center justify-center p-4">
 
     <!-- Основной контейнер игры -->
-    <div id="gameContainer" class="relative w-full h-full max-w-[1200px] max-h-[900px] flex items-center justify-center">
-        
-        <!-- Настройки -->
-        <div id="settingsPanel" class="settings-panel hidden">
-            <div class="text-sm mb-2">Настройки</div>
-            <div class="text-xs mb-1">Музыка:</div>
-            <input type="range" id="musicVolume" class="volume-slider" min="0" max="100" value="50">
-            <div class="text-xs mb-1">Звуки:</div>
-            <input type="range" id="sfxVolume" class="volume-slider" min="0" max="100" value="70">
-            <button id="togglePause" class="action-btn text-xs px-2 py-1 mt-2">Пауза</button>
-        </div>
+    <div id="gameContainer" class="relative w-full h-full max-w-[1000px] max-h-[800px] flex items-center justify-center">
+        <!-- Canvas будет создан PixiJS -->
 
         <!-- UI Игры -->
         <div id="gameUI" class="absolute top-0 left-0 w-full p-4 hidden">
             <div class="flex justify-between items-center gap-4">
                 <div class="ui-element flex-1">
-                    <div class="text-sm text-gray-300 mb-1">LVL: <span id="levelText">1</span> | Комбо: <span id="comboText">x1</span></div>
+                    <div class="text-sm text-gray-300 mb-1">LVL: <span id="levelText">1</span></div>
                     <div id="xpBar"><div id="xpFill"></div></div>
                 </div>
                 <div class="ui-element text-center">
                     <div class="text-lg">ВРЕМЯ</div>
                     <div class="text-3xl" id="timer">00:00</div>
-                    <div class="text-sm text-gray-300" id="waveText">Волна 1</div>
                 </div>
                 <div class="ui-element text-right">
                     <div class="text-lg">ВРАГИ</div>
                     <div class="text-3xl" id="killCount">0</div>
-                    <div class="text-sm text-gray-300">Счёт: <span id="scoreText">0</span></div>
                 </div>
-            </div>
-            <button id="settingsBtn" class="absolute top-4 right-4 action-btn text-sm px-3 py-2">⚙️</button>
-        </div>
-
-        <!-- Предупреждение о боссе -->
-        <div id="bossWarning" class="hidden">⚠️ БОСС ПРИБЛИЖАЕТСЯ! ⚠️</div>
-
-        <!-- Экран паузы -->
-        <div id="pauseScreen" class="absolute inset-0 flex-col items-center justify-center p-8 gap-6 text-center hidden">
-            <h2 class="text-4xl text-yellow-400">ПАУЗА</h2>
-            <div class="flex gap-4">
-                <button id="resumeButton" class="action-btn text-xl px-6 py-3 rounded-lg">Продолжить</button>
-                <button id="mainMenuButton" class="action-btn text-xl px-6 py-3 rounded-lg">Главное меню</button>
             </div>
         </div>
 
@@ -196,27 +119,16 @@
         <!-- Стартовый экран -->
         <div id="startScreen" class="absolute inset-0 flex flex-col items-center justify-center p-8 gap-6 text-center">
             <div class="flex items-center gap-4">
-                 <div style="width:48px; height:48px; background-color: #2b2b2b; display:flex; justify-content: center; align-items: center; position: relative; border-radius: 8px; box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);">
-                    <div style="width: 40px; height: 40px; background-color: white; position: absolute; border-radius: 4px;"></div>
-                    <div style="width: 32px; height: 32px; background-color: #2ecc71; position: absolute; border-radius: 4px;"></div>
+                 <div style="width:48px; height:48px; background-color: #2b2b2b; display:flex; justify-content: center; align-items: center; position: relative;">
+                    <div style="width: 40px; height: 40px; background-color: white; position: absolute;"></div>
+                    <div style="width: 32px; height: 32px; background-color: #2ecc71; position: absolute;"></div>
                 </div>
                 <h1 class="text-4xl md:text-5xl text-green-400">FUD Arena Survivor</h1>
             </div>
-            <div class="text-lg text-yellow-300">Enhanced Edition</div>
             <p class="text-lg mt-4 max-w-xl">Лягушка на курице против волн FUD'а. Выживи как можно дольше!</p>
             <div class="mt-4">
-                <p class="text-xl text-green-300">Новые возможности:</p>
-                <div class="text-sm mt-2 space-y-1">
-                    <p>🔥 Новые типы врагов и боссы</p>
-                    <p>⚡ Система комбо и улучшенные апгрейды</p>
-                    <p>💫 Визуальные эффекты и частицы</p>
-                    <p>🎵 Улучшенное аудио</p>
-                </div>
-            </div>
-            <div class="mt-4">
                 <p class="text-xl">Управление:</p>
-                <p> <span class="text-yellow-400">WASD</span> / <span class="text-yellow-400">Стрелки</span> - движение</p>
-                <p> <span class="text-yellow-400">ESC</span> - пауза</p>
+                <p> <span class="text-yellow-400">WASD</span> / <span class="text-yellow-400">Клавиши со стрелками</span></p>
                 <p class="md:hidden mt-2">Или <span class="text-yellow-400">Джойстик</span> на экране</p>
             </div>
             <button id="startButton" class="action-btn text-2xl px-8 py-4 rounded-lg mt-6">Начать игру</button>
@@ -227,24 +139,8 @@
             <h2 class="text-5xl text-red-500">GAME OVER</h2>
             <p class="text-2xl mt-4">Вы продержались:</p>
             <p id="finalTime" class="text-4xl text-yellow-400">00:00</p>
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                    <p class="text-xl">Уничтожено FUD'еров:</p>
-                    <p id="finalKills" class="text-3xl text-yellow-400">0</p>
-                </div>
-                <div>
-                    <p class="text-xl">Финальный счёт:</p>
-                    <p id="finalScore" class="text-3xl text-green-400">0</p>
-                </div>
-                <div>
-                    <p class="text-xl">Достигнутый уровень:</p>
-                    <p id="finalLevel" class="text-3xl text-blue-400">1</p>
-                </div>
-                <div>
-                    <p class="text-xl">Лучшее комбо:</p>
-                    <p id="finalCombo" class="text-3xl text-purple-400">x1</p>
-                </div>
-            </div>
+            <p class="text-xl mt-2">Уничтожено FUD'еров:</p>
+            <p id="finalKills" class="text-3xl text-yellow-400">0</p>
             <button id="restartButton" class="action-btn text-2xl px-8 py-4 rounded-lg mt-8">Попробовать снова</button>
         </div>
 
@@ -255,229 +151,697 @@
     </div>
 
 <script>
-    // --- DOM ELEMENTS ---
     const gameContainer = document.getElementById('gameContainer');
     const gameUI = document.getElementById('gameUI');
     const levelText = document.getElementById('levelText');
     const xpFill = document.getElementById('xpFill');
     const timerDisplay = document.getElementById('timer');
     const killCountDisplay = document.getElementById('killCount');
-    const scoreText = document.getElementById('scoreText');
-    const comboText = document.getElementById('comboText');
-    const waveText = document.getElementById('waveText');
     const levelUpModal = document.getElementById('levelUpModal');
     const upgradeOptionsContainer = document.getElementById('upgradeOptions');
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
-    const pauseScreen = document.getElementById('pauseScreen');
-    const bossWarning = document.getElementById('bossWarning');
     const startButton = document.getElementById('startButton');
     const restartButton = document.getElementById('restartButton');
-    const resumeButton = document.getElementById('resumeButton');
-    const mainMenuButton = document.getElementById('mainMenuButton');
-    const togglePause = document.getElementById('togglePause');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const musicVolume = document.getElementById('musicVolume');
-    const sfxVolume = document.getElementById('sfxVolume');
     const finalTime = document.getElementById('finalTime');
     const finalKills = document.getElementById('finalKills');
-    const finalScore = document.getElementById('finalScore');
-    const finalLevel = document.getElementById('finalLevel');
-    const finalCombo = document.getElementById('finalCombo');
 
     // --- PIXI.JS SETUP ---
     const app = new PIXI.Application({
         resizeTo: gameContainer,
-        backgroundColor: 0x1a1a1a,
+        backgroundColor: 0x2b2b2b,
         antialias: false,
     });
     gameContainer.appendChild(app.view);
-    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST; // Pixel art friendly
 
     // Game layers
     const worldContainer = new PIXI.Container();
-    const effectsContainer = new PIXI.Container();
-    const uiContainer = new PIXI.Container();
     app.stage.addChild(worldContainer);
-    app.stage.addChild(effectsContainer);
-    app.stage.addChild(uiContainer);
 
-    // --- GAME VARIABLES ---
-    let player, enemies, projectiles, xpOrbs, healthPacks, particles, bosses;
+    let player, enemies, projectiles, xpOrbs, healthPacks;
     let keys = {};
-    let gameState = 'start'; // start, playing, levelup, gameover, paused
+    let gameState = 'start'; // start, playing, levelup, gameover
     let gameTime = 0;
     let killCount = 0;
-    let score = 0;
-    let combo = 1;
-    let maxCombo = 1;
-    let comboTimer = 0;
     let spawnTimer = 0;
     let healthPackSpawnTimer = 0;
     let nextHealthPackSpawnTime = 0;
     let firstHealthPackSpawned = false;
     let wave = 1;
-    let bossSpawned = false;
-    let musicTrack = null;
 
     let joystick, joystickActive = false, joystickPos = {x: 0, y: 0}, joystickDir = {x: 0, y: 0};
 
-    // --- ENHANCED GAME ASSETS ---
+    // --- GAME ASSETS (REPLACE WITH YOUR OWN) ---
     const textures = {
-        player: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="#2ecc71" rx="4"/><rect x="4" y="4" width="24" height="24" fill="#27ae60" rx="2"/><circle cx="12" cy="12" r="3" fill="#fff"/><circle cx="20" cy="12" r="3" fill="#fff"/><rect x="8" y="20" width="16" height="4" fill="#fff" rx="2"/></svg>')),
-        paperHands: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="#e74c3c" rx="4"/><rect x="4" y="4" width="24" height="24" fill="#c0392b" rx="2"/><circle cx="12" cy="12" r="2" fill="#000"/><circle cx="20" cy="12" r="2" fill="#000"/><rect x="8" y="22" width="16" height="2" fill="#000" rx="1"/></svg>')),
-        bear: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="#8b4513" rx="4"/><rect x="2" y="2" width="28" height="28" fill="#654321" rx="4"/><circle cx="10" cy="10" r="2" fill="#ff0000"/><circle cx="22" cy="10" r="2" fill="#ff0000"/><polygon points="16,20 12,24 20,24" fill="#000"/></svg>')),
-        whale: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><ellipse cx="24" cy="16" rx="24" ry="16" fill="#4a90e2"/><ellipse cx="24" cy="16" rx="20" ry="12" fill="#357abd"/><circle cx="16" cy="12" r="3" fill="#fff"/><circle cx="32" cy="12" r="3" fill="#fff"/><polygon points="8,16 0,8 0,24" fill="#357abd"/></svg>')),
-        boss: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="#722f37" rx="8"/><rect x="8" y="8" width="48" height="48" fill="#8b2635" rx="4"/><circle cx="20" cy="20" r="4" fill="#ff0000"/><circle cx="44" cy="20" r="4" fill="#ff0000"/><rect x="16" y="40" width="32" height="8" fill="#000" rx="2"/><polygon points="32,8 24,0 40,0" fill="#ff6b6b"/></svg>')),
-        projectile: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="4" fill="#f1c40f"/><circle cx="4" cy="4" r="2" fill="#fff"/></svg>')),
-        xpOrb: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8" fill="#00ff00"/><circle cx="8" cy="8" r="5" fill="#32ff32"/><circle cx="8" cy="8" r="2" fill="#fff"/></svg>')),
-        healthPack: PIXI.Texture.from('data:image/svg+xml;base64,' + btoa('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="20" fill="#e74c3c" rx="2"/><rect x="2" y="2" width="16" height="16" fill="#c0392b" rx="1"/><rect x="8" y="4" width="4" height="12" fill="#fff"/><rect x="4" y="8" width="12" height="4" fill="#fff"/></svg>')),
+        player: PIXI.Texture.from('frog.png'), // Единый спрайт игрока
+        paperHands: PIXI.Texture.from('bull.png'),
+        bear: PIXI.Texture.from('bear.png'),
+        projectile: PIXI.Texture.from('https://placehold.co/10x10/f1c40f/000000'),
+        xpOrb: PIXI.Texture.from('xp.png'),
+        healthPack: PIXI.Texture.from('health.png'), // Аптечка
     };
     
-    // --- ENHANCED SOUNDS ---
+    // --- SOUNDS ---
     const sounds = {
-        shot: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i+Y6w'),
-        enemyDeath: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRlIEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YS4EAACFhYiFbF1fdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOAgZaLvt559NEwxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8Lv'),
-        heal: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRmQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUAEAACFhYiFbF1fdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOAgZaLvt559NEwxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i'),
-        xp: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRiQEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAEAAB9hX+FbFt9dJBhNjVgodDbq2EcBTyY2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i'),
-        levelUp: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRjIEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4EAACFhYiFbFtfdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i'),
-        bossWarning: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRjwEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRgEAACFhYiFbF1fdJatrJBhNjVgodDbq2EcBT6Y2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2igauBhYB9hH+FbFt9dJBhNjVgodDbq2E'),
-        combo: PIXI.sound.Sound.from('data:audio/wav;base64,UklGRiYEAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQIEAAB9hX+FbFt9dJBhNjVgodDbq2EcBTyY2/LDciMELoHO8tiJOQgYaLvt559OEgxOp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVEwpGn+DyvmwhCC133/LNeSMFKYLN8N2QQAoUXrTp66hVFApGneDyvmwgCC133/LNeSMFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhCC133/LNeSMFl4K47/OhUwwRX8LvZ2MgBT+q5/2i')
+        shot: PIXI.sound.Sound.from('hitHurt.wav'),
+        enemyDeath: PIXI.sound.Sound.from('powerUp.wav'),
+        heal: PIXI.sound.Sound.from('pickupCoin.wav'),
+        xp: PIXI.sound.Sound.from('key.wav'),
     };
+    sounds.shot.volume = 0.2;
+    sounds.enemyDeath.volume = 0.4;
+    sounds.heal.volume = 0.5;
+    sounds.xp.volume = 0.3;
 
-    // Set volumes
-    Object.values(sounds).forEach(sound => {
-        sound.volume = 0.3;
-    });
 
-    // --- ENHANCED GAME SETTINGS ---
+    // --- GAME SETTINGS ---
     const playerStats = {
-        speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 15,
-        attackCooldown: 600, projectileSpeed: 6, projectileDamage: 15,
-        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2,
-        damageAura: { active: false, damage: 0, range: 0, cooldown: 800, lastTick: 0 },
-        shield: { active: false, hp: 0, maxHp: 0, regenRate: 5, lastRegen: 0 },
-        piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false
+        speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 10,
+        attackCooldown: 800, projectileSpeed: 5, projectileDamage: 10,
+        projectileCount: 1, magnetRange: 100,
+        damageAura: { active: false, damage: 0, range: 0, cooldown: 1000, lastTick: 0 }
     };
     
-    const enhancedUpgradePool = [
-        { id: 'attackSpeed', title: 'Быстрые Яйца', description: 'Скорость атаки +25%', rarity: 'common', apply: () => playerStats.attackCooldown *= 0.75 },
-        { id: 'damage', title: 'Тяжелые Яйца', description: 'Урон +35%', rarity: 'common', apply: () => playerStats.projectileDamage *= 1.35 },
-        { id: 'speed', title: 'Быстрые Лапки', description: 'Скорость +20%', rarity: 'common', apply: () => playerStats.speed *= 1.2 },
-        { id: 'health', title: 'Толстая Кожа', description: 'Макс. HP +25, лечит 25%', rarity: 'common', apply: () => { 
-            playerStats.maxHp += 25; 
-            player.hp = Math.min(playerStats.maxHp, player.hp + playerStats.maxHp * 0.25); 
-        }},
-        { id: 'multishot', title: 'Двойной Залп', description: 'Выпускает +1 снаряд', rarity: 'uncommon', apply: () => playerStats.projectileCount++ },
-        { id: 'magnet', title: 'Магнит для Гемов', description: 'Дальность сбора опыта +40%', rarity: 'common', apply: () => playerStats.magnetRange *= 1.4 },
-        { id: 'crit', title: 'Критический Удар', description: 'Шанс крита +8%, урон крита +50%', rarity: 'rare', apply: () => { 
-            playerStats.critChance += 0.08; 
-            playerStats.critMultiplier += 0.5; 
-        }},
-        { id: 'aura', title: 'Аура Стейкинга', description: 'Наносит урон врагам вокруг', rarity: 'rare', apply: () => { 
+    const upgradePool = [
+        { id: 'attackSpeed', title: 'Быстрые Яйца', description: 'Скорость атаки +20%', apply: () => playerStats.attackCooldown *= 0.8 },
+        { id: 'damage', title: 'Тяжелые Яйца', description: 'Урон +25%', apply: () => playerStats.projectileDamage *= 1.25 },
+        { id: 'speed', title: 'Быстрые Лапки', description: 'Скорость +15%', apply: () => playerStats.speed *= 1.15 },
+        { id: 'health', title: 'Толстая Кожа', description: 'Макс. HP +20, лечит 20%', apply: () => { playerStats.maxHp += 20; player.hp = Math.min(playerStats.maxHp, player.hp + playerStats.maxHp * 0.2); } },
+        { id: 'multishot', title: 'Двойной Залп', description: 'Выпускает +1 снаряд', apply: () => playerStats.projectileCount++ },
+        { id: 'magnet', title: 'Магнит для Гемов', description: 'Дальность сбора опыта +30%', apply: () => playerStats.magnetRange *= 1.3 },
+        { id: 'aura', title: 'Аура Стейкинга', description: 'Наносит урон врагам вокруг', apply: () => { 
             if (!playerStats.damageAura.active) {
                 playerStats.damageAura.active = true;
-                playerStats.damageAura.damage = 8;
-                playerStats.damageAura.range = 100;
+                playerStats.damageAura.damage = 5;
+                playerStats.damageAura.range = 80;
             } else {
-                playerStats.damageAura.damage *= 1.6;
-                playerStats.damageAura.range *= 1.3;
+                playerStats.damageAura.damage *= 1.5;
+                playerStats.damageAura.range *= 1.2;
             }
         }},
-        { id: 'shield', title: 'Энергетический Щит', description: 'Получает защитный щит', rarity: 'rare', apply: () => {
-            if (!playerStats.shield.active) {
-                playerStats.shield.active = true;
-                playerStats.shield.maxHp = 50;
-                playerStats.shield.hp = 50;
-            } else {
-                playerStats.shield.maxHp += 30;
-                playerStats.shield.hp = playerStats.shield.maxHp;
-            }
-        }},
-        { id: 'piercing', title: 'Пробивные Снаряды', description: 'Снаряды пробивают +2 врага', rarity: 'uncommon', apply: () => playerStats.piercing += 2 },
-        { id: 'homing', title: 'Наводящиеся Снаряды', description: 'Снаряды следуют за врагами', rarity: 'epic', apply: () => playerStats.homingShots = true },
-        { id: 'explosive', title: 'Взрывные Снаряды', description: 'Снаряды взрываются при попадании', rarity: 'epic', apply: () => playerStats.explosiveShots = true },
-        { id: 'freeze', title: 'Замораживающие Снаряды', description: 'Снаряды замедляют врагов', rarity: 'rare', apply: () => playerStats.freezeShots = true },
-        { id: 'comboMaster', title: 'Мастер Комбо', description: 'Комбо держится дольше, +25% опыта', rarity: 'epic', apply: () => {
-            playerStats.comboMaster = true;
-        }}
     ];
 
-    // --- EVENT LISTENERS ---
+    class Player {
+        constructor(x, y) {
+            this.sprite = new PIXI.Sprite(textures.player);
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+            
+            this.hpBar = new PIXI.Graphics();
+            this.sprite.addChild(this.hpBar);
+            
+            this.aura = new PIXI.Graphics();
+            this.sprite.addChild(this.aura);
+            
+            worldContainer.addChild(this.sprite);
+
+            this.hp = playerStats.hp;
+            this.lastAttackTime = 0;
+            this.lastHitTime = 0;
+        }
+
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+
+        draw() {
+            // HP bar
+            this.hpBar.clear();
+            this.hpBar.beginFill(0xff0000);
+            this.hpBar.drawRect(-this.width/2, this.height/2 + 5, this.width, 8);
+            this.hpBar.beginFill(0x00ff00);
+            this.hpBar.drawRect(-this.width/2, this.height/2 + 5, this.width * (this.hp / playerStats.maxHp), 8);
+            this.hpBar.endFill();
+
+            // Hit effect
+            const isHit = Date.now() - this.lastHitTime < 200;
+            this.sprite.alpha = isHit && Math.floor(Date.now() / 50) % 2 === 0 ? 0.5 : 1;
+            
+            // Aura
+            this.aura.clear();
+             if (playerStats.damageAura.active) {
+                this.aura.lineStyle(3, 0x64ff64, 0.5);
+                this.aura.drawCircle(0, 0, playerStats.damageAura.range);
+            }
+        }
+        
+        update(delta) {
+            let moveX = 0, moveY = 0;
+            
+            if (joystickActive) {
+                moveX = joystickDir.x; moveY = joystickDir.y;
+            } else {
+                if (keys['w'] || keys['ArrowUp']) moveY = -1;
+                if (keys['s'] || keys['ArrowDown']) moveY = 1;
+                if (keys['a'] || keys['ArrowLeft']) moveX = -1;
+                if (keys['d'] || keys['ArrowRight']) moveX = 1;
+            }
+
+            if (moveX !== 0 || moveY !== 0) {
+                const length = Math.sqrt(moveX * moveX + moveY * moveY);
+                this.sprite.x += (moveX / length) * playerStats.speed * delta;
+                this.sprite.y += (moveY / length) * playerStats.speed * delta;
+            }
+
+            // Flip sprite based on horizontal movement
+            if (moveX > 0.1) {
+                this.sprite.scale.x = -1;
+            } else if (moveX < -0.1) {
+                this.sprite.scale.x = 1;
+            }
+            // Counter-flip children so they appear normal
+            this.hpBar.scale.x = this.sprite.scale.x;
+            this.aura.scale.x = this.sprite.scale.x;
+
+            // World bounds
+            this.sprite.x = Math.max(this.width / 2, Math.min(app.screen.width - this.width / 2, this.sprite.x));
+            this.sprite.y = Math.max(this.height / 2, Math.min(app.screen.height - this.height / 2, this.sprite.y));
+
+            // Attack
+            if (Date.now() - this.lastAttackTime > playerStats.attackCooldown) {
+                this.shoot();
+                this.lastAttackTime = Date.now();
+            }
+
+            // Aura damage
+            if (playerStats.damageAura.active && Date.now() - playerStats.damageAura.lastTick > playerStats.damageAura.cooldown) {
+                enemies.forEach(enemy => {
+                    const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
+                    if (dist < playerStats.damageAura.range + enemy.width/2) {
+                        enemy.takeDamage(playerStats.damageAura.damage);
+                    }
+                });
+                playerStats.damageAura.lastTick = Date.now();
+            }
+
+            this.draw();
+        }
+        
+        shoot() {
+            const nearestEnemy = findNearestEnemy(this.x, this.y);
+            if (!nearestEnemy) return;
+
+            sounds.shot.play();
+            for (let i = 0; i < playerStats.projectileCount; i++) {
+                const angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+                const spread = (Math.random() - 0.5) * 0.3;
+                const dx = Math.cos(angle + spread);
+                const dy = Math.sin(angle + spread);
+                projectiles.push(new Projectile(this.x, this.y, dx, dy, playerStats.projectileSpeed, playerStats.projectileDamage));
+            }
+        }
+        
+        takeDamage(damage) {
+            if (Date.now() - this.lastHitTime > 500) {
+                this.hp -= damage;
+                this.lastHitTime = Date.now();
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    endGame();
+                }
+            }
+        }
+
+        addXp(amount) {
+            sounds.xp.play();
+            playerStats.xp += amount;
+            if (playerStats.xp >= playerStats.xpToNextLevel) {
+                this.levelUp();
+            }
+            xpFill.style.width = `${(playerStats.xp / playerStats.xpToNextLevel) * 100}%`;
+        }
+        
+        levelUp() {
+            playerStats.xp -= playerStats.xpToNextLevel;
+            playerStats.level++;
+            playerStats.xpToNextLevel = Math.floor(playerStats.xpToNextLevel * 1.5);
+            levelText.textContent = playerStats.level;
+            gameState = 'levelup';
+            showLevelUpModal();
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+
+    class Enemy {
+        constructor(x, y, type) {
+            this.type = type;
+            this.lastHitTime = 0;
+
+            this.currentAngle = Math.atan2(player.y - y, player.x - x);
+            this.turnSpeed = 0.05;
+
+            switch(type) {
+                case 'PaperHands':
+                    this.sprite = new PIXI.Sprite(textures.paperHands);
+                    this.speed = 2 + Math.random() * 0.5;
+                    this.hp = 10 + wave * 2;
+                    this.damage = 3;
+                    this.xpValue = 1;
+                    break;
+                case 'Bear':
+                    this.sprite = new PIXI.Sprite(textures.bear);
+                    this.speed = 1 + Math.random() * 0.2;
+                    this.hp = 50 + wave * 10;
+                    this.damage = 10;
+                    this.xpValue = 5;
+                    break;
+            }
+            this.maxHp = this.hp;
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+
+            this.hpBar = new PIXI.Graphics();
+            this.sprite.addChild(this.hpBar);
+            worldContainer.addChild(this.sprite);
+        }
+
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+
+        draw() {
+            this.hpBar.clear();
+            if(this.hp < this.maxHp){
+                this.hpBar.beginFill(0xff0000);
+                this.hpBar.drawRect(-this.width/2, -this.height/2 - 8, this.width, 5);
+                this.hpBar.beginFill(0x00ff00);
+                this.hpBar.drawRect(-this.width/2, -this.height/2 - 8, this.width * (this.hp / this.maxHp), 5);
+                this.hpBar.endFill();
+            }
+            const isHit = Date.now() - this.lastHitTime < 100;
+            this.sprite.tint = isHit ? 0xFFFFFF : 0xFFFFFF;
+        }
+
+        update(delta) {
+            const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+            
+            let angleDiff = targetAngle - this.currentAngle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+            this.currentAngle += angleDiff * this.turnSpeed * delta;
+
+            this.sprite.x += Math.cos(this.currentAngle) * this.speed * delta;
+            this.sprite.y += Math.sin(this.currentAngle) * this.speed * delta;
+            
+            // Flip sprite
+            const horizontalDirection = Math.cos(this.currentAngle);
+            if (horizontalDirection > 0) {
+                this.sprite.scale.x = -1;
+            } else if (horizontalDirection < 0) {
+                this.sprite.scale.x = 1;
+            }
+            this.hpBar.scale.x = this.sprite.scale.x;
+            
+            this.draw();
+        }
+
+        takeDamage(damage) {
+            this.hp -= damage;
+            this.lastHitTime = Date.now();
+            if (this.hp <= 0) {
+                sounds.enemyDeath.play();
+                killCount++;
+                xpOrbs.push(new XpOrb(this.x, this.y, this.xpValue));
+                this.destroy();
+                enemies = enemies.filter(e => e !== this);
+            }
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+    
+    class Projectile {
+        constructor(x, y, dx, dy, speed, damage) {
+            this.sprite = new PIXI.Sprite(textures.projectile);
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+            worldContainer.addChild(this.sprite);
+
+            this.dx = dx;
+            this.dy = dy;
+            this.speed = speed;
+            this.damage = damage;
+        }
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+        
+        update(delta) {
+            this.sprite.x += this.dx * this.speed * delta;
+            this.sprite.y += this.dy * this.speed * delta;
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+
+    class XpOrb {
+        constructor(x, y, value) {
+            this.sprite = new PIXI.Sprite(textures.xpOrb);
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+            worldContainer.addChild(this.sprite);
+
+            this.value = value;
+            this.speed = 4;
+        }
+
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+
+        update(delta) {
+            const dist = Math.hypot(this.x - player.x, this.y - player.y);
+            if (dist < playerStats.magnetRange) {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.sprite.x += Math.cos(angle) * this.speed * delta;
+                this.sprite.y += Math.sin(angle) * this.speed * delta;
+            }
+        }
+
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+    
+    class HealthPack {
+        constructor(x, y) {
+            this.sprite = new PIXI.Sprite(textures.healthPack);
+            this.sprite.anchor.set(0.5);
+            this.sprite.x = x;
+            this.sprite.y = y;
+            worldContainer.addChild(this.sprite);
+            this.healAmount = playerStats.maxHp * 0.20; // Лечит 20%
+        }
+        get x() { return this.sprite.x; }
+        get y() { return this.sprite.y; }
+        get width() { return this.sprite.width; }
+        get height() { return this.sprite.height; }
+        
+        destroy() {
+            worldContainer.removeChild(this.sprite);
+        }
+    }
+
+    function init() {
+        worldContainer.removeChildren();
+
+        Object.keys(playerStats).forEach(key => {
+            if (typeof playerStats[key] === 'object' && playerStats[key] !== null) {
+                 if(key === 'damageAura') {
+                    playerStats.damageAura.active = false;
+                    playerStats.damageAura.damage = 0;
+                    playerStats.damageAura.range = 0;
+                }
+            } else {
+                const baseStats = {
+                    speed: 3, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 10,
+                    attackCooldown: 800, projectileSpeed: 5, projectileDamage: 10,
+                    projectileCount: 1, magnetRange: 100,
+                };
+                playerStats[key] = baseStats[key];
+            }
+        });
+        
+        player = new Player(app.screen.width / 2, app.screen.height / 2);
+        enemies = [];
+        projectiles = [];
+        xpOrbs = [];
+        healthPacks = [];
+        gameTime = 0;
+        killCount = 0;
+        wave = 1;
+        healthPackSpawnTimer = 0;
+        nextHealthPackSpawnTime = 15 + Math.random() * 5;
+        firstHealthPackSpawned = false;
+
+        levelText.textContent = playerStats.level;
+        xpFill.style.width = '0%';
+        
+        gameState = 'playing';
+        startScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+        gameUI.classList.remove('hidden');
+        
+        if (isMobile()) {
+            joystick.classList.remove('hidden');
+        }
+    }
+
+    function gameLoop(delta) {
+        if (gameState === 'playing') {
+            update(delta);
+        }
+    }
+    
+    function update(delta) {
+        gameTime += app.ticker.elapsedMS / 1000;
+        spawnTimer += app.ticker.elapsedMS / 1000;
+        healthPackSpawnTimer += app.ticker.elapsedMS / 1000;
+        
+        if (spawnTimer > getSpawnInterval()) {
+            spawnEnemies();
+            spawnTimer = 0;
+            wave = Math.floor(gameTime / 30) + 1;
+        }
+
+        const canSpawnFirstTime = !firstHealthPackSpawned && player && player.hp < playerStats.maxHp * 0.8;
+        const canSpawnRegularly = firstHealthPackSpawned && healthPackSpawnTimer > nextHealthPackSpawnTime;
+
+        if (canSpawnFirstTime || canSpawnRegularly) {
+            spawnHealthPack();
+            healthPackSpawnTimer = 0;
+            nextHealthPackSpawnTime = 15 + Math.random() * 5;
+            if (canSpawnFirstTime) {
+                firstHealthPackSpawned = true;
+            }
+        }
+        
+        player.update(delta);
+        projectiles.forEach(p => p.update(delta));
+        enemies.forEach(e => e.update(delta));
+        xpOrbs.forEach(orb => orb.update(delta));
+
+        checkCollisions();
+
+        projectiles.forEach((p, i) => {
+            if (p.x < 0 || p.x > app.screen.width || p.y < 0 || p.y > app.screen.height) {
+                p.destroy();
+                projectiles.splice(i, 1);
+            }
+        });
+        
+        const minutes = Math.floor(gameTime / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(gameTime % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+        killCountDisplay.textContent = killCount;
+    }
+    
+    function checkCollisions() {
+        // Projectiles vs Enemies
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const proj = projectiles[i];
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const enemy = enemies[j];
+                 if (isColliding(proj, enemy)) {
+                    enemy.takeDamage(proj.damage);
+                    proj.destroy();
+                    projectiles.splice(i, 1);
+                    break; 
+                }
+            }
+        }
+        
+        // Player vs Enemies
+        enemies.forEach(enemy => {
+            if (isColliding(player, enemy)) {
+                player.takeDamage(enemy.damage);
+            }
+        });
+        
+        // Player vs XP Orbs
+        for (let i = xpOrbs.length - 1; i >= 0; i--) {
+            const orb = xpOrbs[i];
+            if (isColliding(orb, player)) {
+                player.addXp(orb.value);
+                orb.destroy();
+                xpOrbs.splice(i, 1);
+            }
+        }
+        
+        // Player vs Health Packs
+        for (let i = healthPacks.length - 1; i >= 0; i--) {
+            const pack = healthPacks[i];
+            if (isColliding(player, pack)) {
+                sounds.heal.play();
+                player.hp = Math.min(playerStats.maxHp, player.hp + pack.healAmount);
+                pack.destroy();
+                healthPacks.splice(i, 1);
+            }
+        }
+    }
+
+    function isColliding(obj1, obj2) {
+        if (!obj1 || !obj2 || !obj1.sprite || !obj2.sprite) return false;
+        const b1 = obj1.sprite.getBounds();
+        const b2 = obj2.sprite.getBounds();
+        return b1.x < b2.x + b2.width &&
+               b1.x + b1.width > b2.x &&
+               b1.y < b2.y + b2.height &&
+               b1.y + b1.height > b2.y;
+    }
+
+    function findNearestEnemy(x, y) {
+        let nearest = null;
+        let nearestDist = Infinity;
+        enemies.forEach(enemy => {
+            const dist = Math.hypot(x - enemy.x, y - enemy.y);
+            if (dist < nearestDist) {
+                nearest = enemy;
+                nearestDist = dist;
+            }
+        });
+        return nearest;
+    }
+    
+    function spawnEnemies() {
+        const numEnemies = Math.floor(1 + wave * 1.2);
+        for (let i = 0; i < numEnemies; i++) {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+            if (edge === 0) { x = Math.random() * app.screen.width; y = -50; } 
+            else if (edge === 1) { x = app.screen.width + 50; y = Math.random() * app.screen.height; } 
+            else if (edge === 2) { x = Math.random() * app.screen.width; y = app.screen.height + 50; } 
+            else { x = -50; y = Math.random() * app.screen.height; }
+            const enemyType = (gameTime > 60 && Math.random() < 0.2) ? 'Bear' : 'PaperHands';
+            enemies.push(new Enemy(x, y, enemyType));
+        }
+    }
+    
+    function spawnHealthPack() {
+        if (healthPacks.length > 2) return;
+        const topPadding = 100;
+        const sidePadding = 50;
+        const x = sidePadding + Math.random() * (app.screen.width - sidePadding * 2);
+        const y = topPadding + Math.random() * (app.screen.height - topPadding - sidePadding);
+        healthPacks.push(new HealthPack(x, y));
+    }
+    
+    function getSpawnInterval() { return Math.max(0.8, 4 - gameTime / 75); }
+    
+    function endGame() {
+        gameState = 'gameover';
+        finalTime.textContent = timerDisplay.textContent;
+        finalKills.textContent = killCount;
+        gameOverScreen.classList.remove('hidden');
+        gameUI.classList.add('hidden');
+        if (joystick) {
+            joystick.classList.add('hidden');
+        }
+    }
+
+    function showLevelUpModal() {
+        levelUpModal.classList.remove('hidden');
+        upgradeOptionsContainer.innerHTML = '';
+        let availableUpgrades = [...upgradePool];
+        if(playerStats.projectileCount >= 5) {
+            availableUpgrades = availableUpgrades.filter(u => u.id !== 'multishot');
+        }
+        const chosenUpgrades = [];
+        for (let i = 0; i < 3; i++) {
+            if(availableUpgrades.length === 0) break;
+            const randomIndex = Math.floor(Math.random() * availableUpgrades.length);
+            chosenUpgrades.push(availableUpgrades[randomIndex]);
+            availableUpgrades.splice(randomIndex, 1);
+        }
+        chosenUpgrades.forEach(upgrade => {
+            const btn = document.createElement('button');
+            btn.className = 'upgrade-btn text-left w-full p-4 rounded-lg';
+            btn.innerHTML = `<div class="font-bold text-lg text-green-300">${upgrade.title}</div><div class="text-sm text-gray-200">${upgrade.description}</div>`;
+            btn.onclick = () => {
+                upgrade.apply();
+                levelUpModal.classList.add('hidden');
+                setTimeout(() => {
+                    gameState = 'playing';
+                }, 2000);
+            };
+            upgradeOptionsContainer.appendChild(btn);
+        });
+    }
+
+    // Event listeners
     startButton.addEventListener('click', () => {
         if (PIXI.sound.context.state === 'suspended') {
             PIXI.sound.context.resume();
         }
         init();
     });
-    
     restartButton.addEventListener('click', init);
-    
-    resumeButton.addEventListener('click', () => {
-        gameState = 'playing';
-        pauseScreen.classList.add('hidden');
-        gameUI.classList.remove('hidden');
-    });
-    
-    mainMenuButton.addEventListener('click', () => {
-        gameState = 'start';
-        pauseScreen.classList.add('hidden');
-        gameUI.classList.add('hidden');
-        startScreen.classList.remove('hidden');
-    });
-    
-    togglePause.addEventListener('click', togglePauseGame);
-    
-    settingsBtn.addEventListener('click', () => {
-        settingsPanel.classList.toggle('hidden');
-    });
-    
-    musicVolume.addEventListener('input', () => {
-        // Music volume would be handled here
-    });
-    
-    sfxVolume.addEventListener('input', () => {
-        const volume = sfxVolume.value / 100;
-        Object.values(sounds).forEach(sound => {
-            sound.volume = volume * 0.3;
-        });
-    });
-
-    window.addEventListener('keydown', e => {
-        keys[e.key] = true;
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            if (gameState === 'playing' || gameState === 'paused') {
-                togglePauseGame();
-            }
-        }
-    });
-    
+    window.addEventListener('keydown', e => keys[e.key] = true);
     window.addEventListener('keyup', e => keys[e.key] = false);
 
-    if (isMobile()) {
+    // Mobile controls
+    function isMobile() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+    function setupJoystick() {
+        joystick = document.getElementById('joystick');
+        const stick = joystick.querySelector('.joystick-stick');
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            joystickActive = true;
+            joystick.style.left = `${touch.clientX - 60}px`;
+            joystick.style.top = `${touch.clientY - 60}px`;
+            joystickPos = { x: touch.clientX, y: touch.clientY };
+        }
+        function handleMove(e) {
+            if (!joystickActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - joystickPos.x;
+            const deltaY = touch.clientY - joystickPos.y;
+            const dist = Math.hypot(deltaX, deltaY);
+            const maxDist = 60;
+            const clampedDist = Math.min(dist, maxDist);
+            const angle = Math.atan2(deltaY, deltaX);
+            joystickDir.x = Math.cos(angle);
+            joystickDir.y = Math.sin(angle);
+            stick.style.transform = `translate(${Math.cos(angle) * clampedDist}px, ${Math.sin(angle) * clampedDist}px)`;
+        }
+        function handleEnd(e) {
+            joystickActive = false;
+            joystickDir = { x: 0, y: 0 };
+            stick.style.transform = `translate(0px, 0px)`;
+        }
+        
+        app.view.addEventListener('touchstart', handleTouch, { passive: false });
+        app.view.addEventListener('touchmove', handleMove, { passive: false });
+        app.view.addEventListener('touchend', handleEnd, { passive: false });
+    }
+    
+    if(isMobile()) {
         setupJoystick();
     }
 
-    // Load the game code from external file
-    async function loadGameCode() {
-        try {
-            const response = await fetch('./game.js');
-            const gameCode = await response.text();
-            eval(gameCode);
-        } catch (error) {
-            console.log('Loading embedded game code...');
-            // Fallback to embedded code - will add this inline
-        }
-    }
-
-    loadGameCode();
     app.ticker.add(gameLoop);
 
 </script>
-<script src="./game.js"></script>
 </body>
 </html>
-</body>
-</html>
+
