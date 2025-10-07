@@ -1,4 +1,4 @@
-// Enhanced Game Classes and Logic for FUD Arena Survivor
+// Enhanced Game Classes and Logic for FUD Arena Survivor - BALANCED EDITION
 
 // --- ENHANCED CLASSES ---
 class Player {
@@ -107,7 +107,7 @@ class Player {
 
         // Shield regeneration
         if (playerStats.shield.active && playerStats.shield.hp < playerStats.shield.maxHp) {
-            if (Date.now() - playerStats.shield.lastRegen > 2000) { // 2 sec delay
+            if (Date.now() - playerStats.shield.lastRegen > 3000) { // 3 sec delay (increased from 2)
                 playerStats.shield.hp = Math.min(playerStats.shield.maxHp, 
                     playerStats.shield.hp + playerStats.shield.regenRate * delta / 60);
             }
@@ -200,7 +200,7 @@ class Player {
         
         // Combo master bonus
         if (playerStats.comboMaster) {
-            amount = Math.floor(amount * 1.25);
+            amount = Math.floor(amount * 1.2); // Reduced from 1.25
         }
         
         playerStats.xp += amount * combo;
@@ -217,7 +217,8 @@ class Player {
         sounds.levelUp.play();
         playerStats.xp -= playerStats.xpToNextLevel;
         playerStats.level++;
-        playerStats.xpToNextLevel = Math.floor(playerStats.xpToNextLevel * 1.25);
+        // Increased XP requirements for next level
+        playerStats.xpToNextLevel = Math.floor(playerStats.xpToNextLevel * 1.4); // Increased scaling
         levelText.textContent = playerStats.level;
         
         // Level up particles
@@ -244,28 +245,29 @@ class Enemy {
         this.currentAngle = Math.atan2(player.y - y, player.x - x);
         this.turnSpeed = 0.06;
 
+        // BALANCED ENEMY STATS - increased HP and damage significantly
         switch(type) {
             case 'PaperHands':
                 this.sprite = new PIXI.Sprite(textures.paperHands);
-                this.speed = 1.5 + Math.random() * 0.9;
-                this.hp = 20 + wave * 3;
-                this.damage = 10;
+                this.speed = 1.2 + Math.random() * 0.6; // Slightly reduced speed
+                this.hp = 35 + wave * 8; // Increased base HP and scaling
+                this.damage = 15; // Increased damage
                 this.xpValue = 2;
                 this.scoreValue = 10;
                 break;
             case 'Bear':
                 this.sprite = new PIXI.Sprite(textures.bear);
-                this.speed = 0.8 + Math.random() * 0.5;
-                this.hp = 60 + wave * 12;
-                this.damage = 18;
+                this.speed = 0.7 + Math.random() * 0.4; // Slightly reduced speed
+                this.hp = 90 + wave * 20; // Significantly increased HP
+                this.damage = 25; // Increased damage
                 this.xpValue = 4;
                 this.scoreValue = 50;
                 break;
             case 'Whale':
                 this.sprite = new PIXI.Sprite(textures.whale);
-                this.speed = 0.5 + Math.random() * 0.3;
-                this.hp = 120 + wave * 20;
-                this.damage = 30;
+                this.speed = 0.4 + Math.random() * 0.2; // Slightly reduced speed
+                this.hp = 180 + wave * 35; // Significantly increased HP
+                this.damage = 40; // Increased damage
                 this.xpValue = 8;
                 this.scoreValue = 100;
                 break;
@@ -307,7 +309,7 @@ class Enemy {
         // Freeze effect
         if (this.freezeTime > 0) {
             this.freezeTime -= delta;
-            this.speed = this.originalSpeed * 0.3;
+            this.speed = this.originalSpeed * 0.4; // Less freeze effectiveness
         } else {
             this.speed = this.originalSpeed;
         }
@@ -361,7 +363,7 @@ class Enemy {
         }
     }
 
-    freeze(duration = 180) {
+    freeze(duration = 120) { // Reduced freeze duration
         this.freezeTime = Math.max(this.freezeTime, duration);
     }
 
@@ -379,16 +381,16 @@ class Boss {
         this.sprite.y = y;
         this.sprite.scale.set(1.5);
         
-        this.speed = 0.8;
-        this.hp = 500 + wave * 100;
+        this.speed = 0.6; // Slightly reduced speed
+        this.hp = 800 + wave * 150; // Significantly increased HP
         this.maxHp = this.hp;
-        this.damage = 25;
+        this.damage = 35; // Increased damage
         this.xpValue = 50;
         this.scoreValue = 1000;
         
         this.lastAttackTime = 0;
         this.lastHitTime = 0;
-        this.attackCooldown = 2000;
+        this.attackCooldown = 2500; // Slightly longer cooldown
         
         this.hpBar = new PIXI.Graphics();
         this.sprite.addChild(this.hpBar);
@@ -444,7 +446,7 @@ class Boss {
             const angle = (i / 8) * Math.PI * 2;
             const dx = Math.cos(angle);
             const dy = Math.sin(angle);
-            projectiles.push(new EnemyProjectile(this.x, this.y, dx, dy, 3, this.damage / 2));
+            projectiles.push(new EnemyProjectile(this.x, this.y, dx, dy, 2.5, this.damage / 2)); // Slightly slower projectiles
         }
     }
 
@@ -517,8 +519,8 @@ class Projectile {
     update(delta) {
         this.lifetime += delta;
         
-        // Homing behavior
-        if (playerStats.homingShots && this.target && this.lifetime > 10) {
+        // Homing behavior - less aggressive
+        if (playerStats.homingShots && this.target && this.lifetime > 15) {
             // Check if target is still alive and valid
             const isTargetValid = enemies.includes(this.target) || bosses.includes(this.target);
             
@@ -535,7 +537,7 @@ class Projectile {
                 while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                 while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
                 
-                const turnSpeed = 0.1;
+                const turnSpeed = 0.08; // Reduced homing strength
                 const newAngle = currentAngle + angleDiff * turnSpeed;
                 this.dx = Math.cos(newAngle);
                 this.dy = Math.sin(newAngle);
@@ -553,18 +555,18 @@ class Projectile {
 
     explode() {
         if (playerStats.explosiveShots) {
-            // Explosion damage to nearby enemies
-            const explosionRadius = 80;
+            // Explosion damage to nearby enemies - reduced effectiveness
+            const explosionRadius = 60; // Reduced from 80
             enemies.forEach(enemy => {
                 const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
                 if (dist < explosionRadius) {
-                    enemy.takeDamage(this.damage * 0.6);
+                    enemy.takeDamage(this.damage * 0.4); // Reduced from 0.6
                 }
             });
             bosses.forEach(boss => {
                 const dist = Math.hypot(this.x - boss.x, this.y - boss.y);
                 if (dist < explosionRadius) {
-                    boss.takeDamage(this.damage * 0.6);
+                    boss.takeDamage(this.damage * 0.4); // Reduced from 0.6
                 }
             });
             
@@ -748,7 +750,7 @@ class XpOrb {
         worldContainer.addChild(this.sprite);
 
         this.value = value;
-        this.speed = 5;
+        this.speed = 4; // Reduced from 5
         this.bobOffset = Math.random() * Math.PI * 2;
         this.time = 0;
     }
@@ -765,7 +767,7 @@ class XpOrb {
         this.sprite.y += Math.sin(this.time + this.bobOffset) * 0.5;
         this.sprite.rotation += 0.05 * delta;
         
-        // Magnetic pull
+        // Magnetic pull - only when closer
         const dist = Math.hypot(this.x - player.x, this.y - player.y);
         if (dist < playerStats.magnetRange) {
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
@@ -787,7 +789,7 @@ class HealthPack {
         this.sprite.y = y;
         this.sprite.scale.set(1.2);
         worldContainer.addChild(this.sprite);
-        this.healAmount = playerStats.maxHp * 0.25;
+        this.healAmount = playerStats.maxHp * 0.2; // Reduced from 0.25
         this.time = 0;
     }
     
@@ -811,11 +813,11 @@ function init() {
     worldContainer.removeChildren();
     effectsContainer.removeChildren();
 
-    // Reset stats
+    // Reset stats with BALANCED VALUES
     Object.assign(playerStats, {
-        speed: 3.0, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 50,
-        attackCooldown: 700, projectileSpeed: 5.5, projectileDamage: 15,
-        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2.0,
+        speed: 2.5, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 50, // Increased starting XP requirement
+        attackCooldown: 1000, projectileSpeed: 4.5, projectileDamage: 12, // Reduced damage and speed
+        projectileCount: 1, magnetRange: 80, critChance: 0.02, critMultiplier: 1.8, // Reduced crit and magnet range
         piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false,
         comboMaster: false,
         damageAura: { active: false, damage: 0, range: 0, cooldown: 900, lastTick: 0 },
@@ -839,7 +841,7 @@ function init() {
     bossSpawned = false;
     spawnTimer = 0;
     healthPackSpawnTimer = 0;
-    nextHealthPackSpawnTime = 20 + Math.random() * 10;
+    nextHealthPackSpawnTime = 25 + Math.random() * 15; // Increased spawn time
     firstHealthPackSpawned = false;
 
     updateUI();
@@ -873,8 +875,8 @@ function update(delta) {
         comboTimer = 0;
     }
     
-    // Wave progression
-    wave = Math.floor(gameTime / 45) + 1;
+    // Wave progression - slower
+    wave = Math.floor(gameTime / 60) + 1; // Increased from 45 to 60 seconds per wave
     
     // Enemy spawning
     if (spawnTimer > getSpawnInterval()) {
@@ -882,20 +884,20 @@ function update(delta) {
         spawnTimer = 0;
     }
     
-    // Boss spawning every 3 minutes
-    if (!bossSpawned && gameTime > 0 && Math.floor(gameTime / 180) > Math.floor((gameTime - app.ticker.elapsedMS / 1000) / 180)) {
+    // Boss spawning every 4 minutes instead of 3
+    if (!bossSpawned && gameTime > 0 && Math.floor(gameTime / 240) > Math.floor((gameTime - app.ticker.elapsedMS / 1000) / 240)) {
         spawnBoss();
     }
 
     // Health pack spawning
-    const needHealing = player && player.hp < playerStats.maxHp * 0.7;
+    const needHealing = player && player.hp < playerStats.maxHp * 0.6; // Stricter healing requirement
     const canSpawnFirstTime = !firstHealthPackSpawned && needHealing;
     const canSpawnRegularly = firstHealthPackSpawned && healthPackSpawnTimer > nextHealthPackSpawnTime;
 
     if (canSpawnFirstTime || canSpawnRegularly) {
         spawnHealthPack();
         healthPackSpawnTimer = 0;
-        nextHealthPackSpawnTime = 25 + Math.random() * 15;
+        nextHealthPackSpawnTime = 30 + Math.random() * 20; // Increased spawn time
         if (canSpawnFirstTime) {
             firstHealthPackSpawned = true;
         }
@@ -1014,12 +1016,12 @@ function checkCollisions() {
 }
 
 function updateCombo() {
-    combo = Math.min(combo + 1, 50);
+    combo = Math.min(combo + 1, 30); // Reduced max combo from 50 to 30
     maxCombo = Math.max(maxCombo, combo);
     comboTimer = 0;
     
-    // Combo sound effect
-    if (combo % 5 === 0) {
+    // Combo sound effect - less frequent
+    if (combo % 10 === 0) { // Changed from 5 to 10
         sounds.combo.play();
         showComboNotification();
     }
@@ -1095,7 +1097,11 @@ function findNearestEnemy(x, y) {
 }
 
 function spawnEnemies() {
-    const numEnemies = Math.floor(2 + wave * 1.3);
+    // BALANCED ENEMY SPAWNING - more gradual progression
+    const baseEnemies = Math.min(1 + Math.floor(gameTime / 30), 4); // More gradual increase
+    const waveBonus = Math.floor(wave * 0.5); // Reduced wave bonus
+    const numEnemies = baseEnemies + waveBonus;
+    
     for (let i = 0; i < numEnemies; i++) {
         const edge = Math.floor(Math.random() * 4);
         let x, y;
@@ -1105,14 +1111,14 @@ function spawnEnemies() {
         else { x = -60; y = Math.random() * app.screen.height; }
         
         let enemyType = 'PaperHands';
-        // Более постепенное появление врагов
-        if (gameTime > 30 && Math.random() < 0.3) enemyType = 'Bear';
-        if (gameTime > 90 && Math.random() < 0.2) enemyType = 'Whale';
-        // После 3 минут увеличиваем шансы более сильных врагов
-        if (gameTime > 180) {
+        // More gradual enemy type progression
+        if (gameTime > 45 && Math.random() < 0.25) enemyType = 'Bear'; // Delayed and reduced chance
+        if (gameTime > 120 && Math.random() < 0.15) enemyType = 'Whale'; // Significantly delayed
+        // After 5 minutes, increase stronger enemy chances slightly
+        if (gameTime > 300) {
             const rand = Math.random();
-            if (rand < 0.1) enemyType = 'Whale';
-            else if (rand < 0.4) enemyType = 'Bear';
+            if (rand < 0.08) enemyType = 'Whale'; // Still rare
+            else if (rand < 0.35) enemyType = 'Bear';
         }
         
         enemies.push(new Enemy(x, y, enemyType));
@@ -1120,7 +1126,7 @@ function spawnEnemies() {
 }
 
 function spawnHealthPack() {
-    if (healthPacks.length > 3) return;
+    if (healthPacks.length > 2) return; // Reduced from 3
     const topPadding = 120;
     const sidePadding = 60;
     const x = sidePadding + Math.random() * (app.screen.width - sidePadding * 2);
@@ -1139,7 +1145,8 @@ function cleanupProjectiles() {
 }
 
 function getSpawnInterval() { 
-    return Math.max(0.6, 3.5 - gameTime / 90); 
+    // BALANCED SPAWN TIMING - slower progression
+    return Math.max(1.0, 4.0 - gameTime / 120); // Slower reduction, higher minimum
 }
 
 function updateUI() {
@@ -1173,8 +1180,8 @@ function showLevelUpModal() {
     
     // Filter upgrades by rarity and availability
     let availableUpgrades = enhancedUpgradePool.filter(upgrade => {
-        if (upgrade.id === 'multishot' && playerStats.projectileCount >= 8) return false;
-        if (upgrade.id === 'piercing' && playerStats.piercing >= 10) return false;
+        if (upgrade.id === 'multishot' && playerStats.projectileCount >= 6) return false; // Reduced cap
+        if (upgrade.id === 'piercing' && playerStats.piercing >= 5) return false; // Reduced cap
         if (upgrade.id === 'homing' && playerStats.homingShots) return false;
         if (upgrade.id === 'explosive' && playerStats.explosiveShots) return false;
         if (upgrade.id === 'freeze' && playerStats.freezeShots) return false;
@@ -1187,8 +1194,8 @@ function showLevelUpModal() {
     for (let i = 0; i < 3; i++) {
         if (availableUpgrades.length === 0) break;
         
-        // Rarity weights
-        const rarityWeights = { common: 50, uncommon: 25, rare: 15, epic: 10 };
+        // Adjusted rarity weights - more balanced
+        const rarityWeights = { common: 55, uncommon: 25, rare: 15, epic: 5 }; // Reduced epic chance
         const totalWeight = availableUpgrades.reduce((sum, upgrade) => sum + rarityWeights[upgrade.rarity], 0);
         
         let random = Math.random() * totalWeight;
@@ -1228,27 +1235,27 @@ function showLevelUpModal() {
             upgrade.apply();
             levelUpModal.classList.add('hidden');
             
-            // Показать сообщение о паузе
+            // Show pause message with shorter duration
             const pauseMessage = document.createElement('div');
             pauseMessage.style.cssText = `
                 position: absolute; 
                 top: 50%; 
                 left: 50%; 
                 transform: translate(-50%, -50%);
-                font-size: 2em; 
+                font-size: 1.5em; 
                 color: #ffff00; 
                 text-shadow: 2px 2px 4px #000;
                 z-index: 1000;
                 pointer-events: none;
             `;
-            pauseMessage.textContent = 'Приготовьтесь...';
+            pauseMessage.textContent = 'Готовы!';
             gameContainer.appendChild(pauseMessage);
             
-            // Убрать сообщение и возобновить игру через 1 секунду
+            // Resume faster
             setTimeout(() => {
                 gameContainer.removeChild(pauseMessage);
                 gameState = 'playing';
-            }, 1000);
+            }, 500); // Reduced from 1000ms
         };
         upgradeOptionsContainer.appendChild(btn);
     });

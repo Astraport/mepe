@@ -275,15 +275,15 @@
                 </div>
                 <h1 class="text-4xl md:text-5xl text-green-400">FUD Arena Survivor</h1>
             </div>
-            <div class="text-lg text-yellow-300">Enhanced Edition</div>
+            <div class="text-lg text-yellow-300">Balanced Edition</div>
             <p class="text-lg mt-4 max-w-xl">Лягушка на курице против волн FUD'а. Выживи как можно дольше!</p>
             <div class="mt-4">
-                <p class="text-xl text-green-300">Новые возможности:</p>
+                <p class="text-xl text-green-300">Особенности баланса:</p>
                 <div class="text-sm mt-2 space-y-1">
-                    <p>🔥 Новые типы врагов и боссы</p>
-                    <p>⚡ Система комбо и улучшенные апгрейды</p>
-                    <p>💫 Визуальные эффекты и частицы</p>
-                    <p>🎵 Улучшенное аудио</p>
+                    <p>⚖️ Сбалансированная сложность</p>
+                    <p>🎯 Постепенное усиление врагов</p>
+                    <p>📈 Осмысленная прогрессия</p>
+                    <p>🎮 Стратегический геймплей</p>
                 </div>
             </div>
             <div class="mt-4">
@@ -443,53 +443,54 @@
 
     // --- ENHANCED GAME SETTINGS (REBALANCED) ---
     const playerStats = {
-        speed: 3.0, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 22,
-        attackCooldown: 700, projectileSpeed: 5.5, projectileDamage: 15,
-        projectileCount: 1, magnetRange: 120, critChance: 0.05, critMultiplier: 2.0,
+        speed: 2.5, maxHp: 100, hp: 100, level: 1, xp: 0, xpToNextLevel: 50,
+        attackCooldown: 1000, projectileSpeed: 4.5, projectileDamage: 12,
+        projectileCount: 1, magnetRange: 80, critChance: 0.02, critMultiplier: 1.8,
         damageAura: { active: false, damage: 0, range: 0, cooldown: 900, lastTick: 0 },
         shield: { active: false, hp: 0, maxHp: 0, regenRate: 4, lastRegen: 0 },
-        piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false
+        piercing: 0, homingShots: false, explosiveShots: false, freezeShots: false,
+        comboMaster: false
     };
     
     const enhancedUpgradePool = [
-        { id: 'attackSpeed', title: 'Быстрые Яйца', description: 'Скорость атаки +25%', rarity: 'common', apply: () => playerStats.attackCooldown *= 0.75 },
-        { id: 'damage', title: 'Тяжелые Яйца', description: 'Урон +35%', rarity: 'common', apply: () => playerStats.projectileDamage *= 1.35 },
-        { id: 'speed', title: 'Быстрые Лапки', description: 'Скорость +20%', rarity: 'common', apply: () => playerStats.speed *= 1.2 },
-        { id: 'health', title: 'Толстая Кожа', description: 'Макс. HP +25, лечит 25%', rarity: 'common', apply: () => { 
-            playerStats.maxHp += 25; 
-            player.hp = Math.min(playerStats.maxHp, player.hp + playerStats.maxHp * 0.25); 
+        { id: 'attackSpeed', title: 'Быстрые Яйца', description: 'Скорость атаки +15%', rarity: 'common', apply: () => playerStats.attackCooldown *= 0.85 },
+        { id: 'damage', title: 'Тяжелые Яйца', description: 'Урон +20%', rarity: 'common', apply: () => playerStats.projectileDamage *= 1.2 },
+        { id: 'speed', title: 'Быстрые Лапки', description: 'Скорость +15%', rarity: 'common', apply: () => playerStats.speed *= 1.15 },
+        { id: 'health', title: 'Толстая Кожа', description: 'Макс. HP +20, лечит 20%', rarity: 'common', apply: () => { 
+            playerStats.maxHp += 20; 
+            player.hp = Math.min(playerStats.maxHp, player.hp + playerStats.maxHp * 0.2); 
         }},
         { id: 'multishot', title: 'Двойной Залп', description: 'Выпускает +1 снаряд', rarity: 'uncommon', apply: () => playerStats.projectileCount++ },
-        { id: 'magnet', title: 'Магнит для Гемов', description: 'Дальность сбора опыта +40%', rarity: 'common', apply: () => playerStats.magnetRange *= 1.4 },
-        { id: 'crit', title: 'Критический Удар', description: 'Шанс крита +8%, урон крита +50%', rarity: 'rare', apply: () => { 
-            playerStats.critChance += 0.08; 
-            playerStats.critMultiplier += 0.5; 
+        { id: 'magnet', title: 'Магнит для Гемов', description: 'Дальность сбора опыта +25%', rarity: 'common', apply: () => playerStats.magnetRange *= 1.25 },
+        { id: 'crit', title: 'Критический Удар', description: 'Шанс крита +5%, урон крита +30%', rarity: 'rare', apply: () => { 
+            playerStats.critChance += 0.05; 
+            playerStats.critMultiplier += 0.3; 
         }},
         { id: 'aura', title: 'Аура Стейкинга', description: 'Наносит урон врагам вокруг', rarity: 'rare', apply: () => { 
             if (!playerStats.damageAura.active) {
                 playerStats.damageAura.active = true;
-                playerStats.damageAura.damage = 8;
-                playerStats.damageAura.range = 100;
+                playerStats.damageAura.damage = 5;
+                playerStats.damageAura.range = 80;
             } else {
-                playerStats.damageAura.damage *= 1.6;
-                playerStats.damageAura.range *= 1.3;
+                playerStats.damageAura.damage *= 1.4;
+                playerStats.damageAura.range *= 1.15;
             }
         }},
         { id: 'shield', title: 'Энергетический Щит', description: 'Получает защитный щит', rarity: 'rare', apply: () => {
             if (!playerStats.shield.active) {
                 playerStats.shield.active = true;
-                playerStats.shield.maxHp = 50;
-                playerStats.shield.hp = 50;
+                playerStats.shield.maxHp = 40;
+                playerStats.shield.hp = 40;
             } else {
-                playerStats.shield.maxHp += 30;
+                playerStats.shield.maxHp += 25;
                 playerStats.shield.hp = playerStats.shield.maxHp;
             }
         }},
-        { id: 'piercing', title: 'Пробивные Снаряды', description: 'Снаряды пробивают +2 врага', rarity: 'uncommon', apply: () => playerStats.piercing += 2 },
+        { id: 'piercing', title: 'Пробивные Снаряды', description: 'Снаряды пробивают +1 врага', rarity: 'uncommon', apply: () => playerStats.piercing += 1 },
         { id: 'homing', title: 'Наводящиеся Снаряды', description: 'Снаряды следуют за врагами', rarity: 'epic', apply: () => playerStats.homingShots = true },
         { id: 'explosive', title: 'Взрывные Снаряды', description: 'Снаряды взрываются при попадании', rarity: 'epic', apply: () => playerStats.explosiveShots = true },
         { id: 'freeze', title: 'Замораживающие Снаряды', description: 'Снаряды замедляют врагов', rarity: 'rare', apply: () => playerStats.freezeShots = true },
-        { id: 'comboMaster', title: 'Мастер Комбо', description: 'Комбо держится дольше, +25% опыта', rarity: 'epic', apply: () => {
+        { id: 'comboMaster', title: 'Мастер Комбо', description: 'Комбо держится дольше, +20% опыта', rarity: 'epic', apply: () => {
             playerStats.comboMaster = true;
         }}
     ];
