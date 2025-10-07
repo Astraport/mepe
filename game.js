@@ -247,25 +247,25 @@ class Enemy {
         switch(type) {
             case 'PaperHands':
                 this.sprite = new PIXI.Sprite(textures.paperHands);
-                this.speed = 1.5 + Math.random() * 0.5;
-                this.hp = 15 + wave * 3;
-                this.damage = 6;
+                this.speed = 1.5 + Math.random() * 0.8;
+                this.hp = 20 + wave * 3;
+                this.damage = 10;
                 this.xpValue = 2;
                 this.scoreValue = 10;
                 break;
             case 'Bear':
                 this.sprite = new PIXI.Sprite(textures.bear);
                 this.speed = 0.8 + Math.random() * 0.3;
-                this.hp = 50 + wave * 12;
-                this.damage = 10;
+                this.hp = 60 + wave * 12;
+                this.damage = 18;
                 this.xpValue = 4;
                 this.scoreValue = 50;
                 break;
             case 'Whale':
                 this.sprite = new PIXI.Sprite(textures.whale);
                 this.speed = 0.5 + Math.random() * 0.2;
-                this.hp = 100 + wave * 20;
-                this.damage = 18;
+                this.hp = 120 + wave * 20;
+                this.damage = 30;
                 this.xpValue = 8;
                 this.scoreValue = 100;
                 break;
